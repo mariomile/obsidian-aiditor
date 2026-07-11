@@ -38,9 +38,10 @@ export default class GlossaPlugin extends Plugin {
     // every active-leaf-change (design §6).
     this.unwireOrphanRecompute = wireOrphanRecompute(this.app, this.store);
 
-    // Keep every open editor's gutter markers in sync with store mutations
-    // that don't themselves touch the note text (resolve/reopen/delete).
-    this.store.onChange(() => this.refreshAllGutters());
+    // Gutter markers stay in sync with store mutations that don't touch the
+    // note text (resolve/reopen/delete) via each editor's own ViewPlugin
+    // subscription (GutterHost.onStoreChange), so no global refresh is wired
+    // here — see glossaGutterExtension.
 
     const gutterHost: GutterHost = {
       countForBlockId: (blockId) => {
@@ -52,14 +53,14 @@ export default class GlossaPlugin extends Plugin {
       },
       onMarkerClick: (blockId, dom) => {
         const notePath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path;
-        const annotation = this.store
-          .getAll()
-          .find((a) => a.blockId === blockId && a.status === 'active' && (!notePath || a.notePath === notePath));
-        if (annotation) this.openPopoverAt(annotation.id, dom);
+        const rect = dom.getBoundingClientRect();
+        const anchor: VirtualElement = { getBoundingClientRect: () => rect };
+        this.popover.openForBlock(blockId, notePath ?? undefined, anchor);
       },
       onPlusClick: (line, dom) => {
         void this.annotateAtLine(line, dom);
       },
+      onStoreChange: (listener) => this.store.onChange(() => listener()),
     };
     this.registerEditorExtension(glossaGutterExtension(gutterHost, this.settings.gutterSide));
 
@@ -113,12 +114,6 @@ export default class GlossaPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  private openPopoverAt(annotationId: string, dom: HTMLElement): void {
-    const rect = dom.getBoundingClientRect();
-    const anchor: VirtualElement = { getBoundingClientRect: () => rect };
-    this.popover.open(annotationId, anchor);
-  }
-
   private openPopoverSeam: OpenAnnotationPopover = ({ annotationId }) => {
     // No specific DOM anchor available from create.ts's caret-based flow —
     // anchor to the editor's current cursor position on screen.
@@ -127,7 +122,7 @@ export default class GlossaPlugin extends Plugin {
     const coords = cm ? cm.coordsAtPos(cm.state.selection.main.head) : null;
     const rect = coords ?? new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
     const anchor: VirtualElement = { getBoundingClientRect: () => rect };
-    this.popover.open(annotationId, anchor);
+    this.popover.open(annotationId, anchor, { focusBody: true });
   };
 
   private async runCreateAnnotation(): Promise<void> {
@@ -144,7 +139,11 @@ export default class GlossaPlugin extends Plugin {
     if (!view?.editor) return;
     view.editor.setCursor({ line, ch: 0 });
     try {
-      const openAt: OpenAnnotationPopover = ({ annotationId }) => this.openPopoverAt(annotationId, dom);
+      const openAt: OpenAnnotationPopover = ({ annotationId }) => {
+        const rect = dom.getBoundingClientRect();
+        const anchor: VirtualElement = { getBoundingClientRect: () => rect };
+        this.popover.open(annotationId, anchor, { focusBody: true });
+      };
       await createAnnotation({ app: this.app, store: this.store, openPopover: openAt });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

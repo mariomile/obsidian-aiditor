@@ -1,14 +1,22 @@
 /**
  * The annotation popover (design §5): view/edit body, Resolve, Reopen,
- * Delete, and (for orphans) Re-anchor to the current selection. One
- * singleton instance is owned by main.ts and repositioned/refilled per open()
- * call — mirrors composer's ComposerMenu singleton-popover pattern.
+ * Delete (with confirmation), and (for orphans) Re-anchor to the current
+ * selection. When a block carries more than one annotation the popover shows
+ * a selectable list; picking one drills into its editor. One singleton
+ * instance is owned by main.ts and repositioned/refilled per open() call —
+ * mirrors composer's ComposerMenu singleton-popover pattern.
+ *
+ * Positioning uses `@floating-ui/dom` `computePosition` with offset/flip/shift
+ * middleware plus `autoUpdate` while open, so the popover tracks its anchor as
+ * the editor scrolls or resizes. Dismisses on outside click and on Esc.
+ * Theme-aware — colors come only from Obsidian CSS variables.
  */
 
 import { Component, MarkdownView, Notice, setIcon, type App } from 'obsidian';
-import { computePosition, offset, flip, shift, type VirtualElement } from '@floating-ui/dom';
+import { computePosition, autoUpdate, offset, flip, shift, type VirtualElement } from '@floating-ui/dom';
 import { extractPrefix, extractSuffix, type BlockSpan } from './anchor-core.ts';
 import { ensureBlockId } from './anchor.ts';
+import { annotationsForBlock, isSaveShortcut } from './popover-core.ts';
 import type { AnnotationVaultStore } from './store.ts';
 
 const CONTEXT_LEN = 32;
@@ -18,10 +26,19 @@ export interface PopoverDeps {
   store: AnnotationVaultStore;
 }
 
+export interface OpenOptions {
+  /** Pre-focus the body editor (used when reached via the create flow). */
+  focusBody?: boolean;
+}
+
 export class AnnotationPopover extends Component {
   private el: HTMLElement;
   private visible = false;
   private annotationId: string | null = null;
+  /** When set, the popover is scoped to a block and may show a picker list. */
+  private blockScope: { blockId: string; notePath: string | undefined } | null = null;
+  private focusBody = false;
+  private cleanupAutoUpdate: (() => void) | null = null;
 
   constructor(private deps: PopoverDeps) {
     super();
@@ -44,12 +61,35 @@ export class AnnotationPopover extends Component {
     return this.el.contains(t);
   }
 
-  /** Opens (or refills, if already open) the popover for `annotationId`, anchored to `anchor`. */
-  open(annotationId: string, anchor: VirtualElement): void {
+  /** Opens (or refills, if already open) the popover for a single `annotationId`. */
+  open(annotationId: string, anchor: VirtualElement, opts: OpenOptions = {}): void {
     this.annotationId = annotationId;
+    this.blockScope = null;
+    this.focusBody = opts.focusBody ?? false;
+    this.show(anchor);
+  }
+
+  /**
+   * Opens the popover scoped to a block: if the block has exactly one
+   * annotation it drills straight in; if it has several it shows a picker.
+   */
+  openForBlock(blockId: string, notePath: string | undefined, anchor: VirtualElement, opts: OpenOptions = {}): void {
+    const list = annotationsForBlock(this.deps.store.getAll(), blockId, notePath);
+    this.blockScope = { blockId, notePath };
+    this.focusBody = opts.focusBody ?? false;
+    this.annotationId = list.length === 1 ? list[0]!.id : null;
+    this.show(anchor);
+  }
+
+  private show(anchor: VirtualElement): void {
     this.render();
     this.el.show();
     this.visible = true;
+    this.cleanupAutoUpdate?.();
+    this.cleanupAutoUpdate = autoUpdate(anchor, this.el, () => this.position(anchor));
+  }
+
+  private position(anchor: VirtualElement): void {
     void computePosition(anchor, this.el, {
       placement: 'right-start',
       middleware: [offset(8), flip({ fallbackPlacements: ['left-start', 'bottom-start'] }), shift({ padding: 8 })],
@@ -64,17 +104,69 @@ export class AnnotationPopover extends Component {
     if (!this.visible) return;
     this.visible = false;
     this.annotationId = null;
+    this.blockScope = null;
+    this.focusBody = false;
+    this.cleanupAutoUpdate?.();
+    this.cleanupAutoUpdate = null;
     this.el.hide();
   }
 
   private render(): void {
-    const { store } = this.deps;
     this.el.empty();
-    if (!this.annotationId) return;
-    const a = store.getById(this.annotationId);
+
+    // Block-scoped with multiple annotations and none selected yet → picker.
+    if (this.blockScope && this.annotationId === null) {
+      this.renderList();
+      return;
+    }
+    if (!this.annotationId) {
+      this.el.createDiv({ cls: 'glossa-popover-empty', text: 'No annotation.' });
+      return;
+    }
+    this.renderAnnotation(this.annotationId);
+  }
+
+  private renderList(): void {
+    const { store } = this.deps;
+    const scope = this.blockScope!;
+    const list = annotationsForBlock(store.getAll(), scope.blockId, scope.notePath);
+    if (list.length === 0) {
+      this.el.createDiv({ cls: 'glossa-popover-empty', text: 'No annotation.' });
+      return;
+    }
+    this.el.createDiv({ cls: 'glossa-popover-list-header', text: `${list.length} annotations` });
+    const listEl = this.el.createDiv({ cls: 'glossa-popover-list' });
+    for (const a of list) {
+      const item = listEl.createDiv({ cls: 'glossa-popover-list-item' });
+      item.createSpan({ cls: `glossa-status glossa-status--${a.status}`, text: a.status });
+      item.createSpan({ cls: 'glossa-popover-list-item-body', text: a.body || a.quote || '(empty)' });
+      this.registerDomEvent(item, 'click', () => {
+        this.annotationId = a.id;
+        this.render();
+      });
+    }
+  }
+
+  private renderAnnotation(annotationId: string): void {
+    const { store } = this.deps;
+    const a = store.getById(annotationId);
     if (!a) {
       this.el.createDiv({ cls: 'glossa-popover-empty', text: 'Annotation not found.' });
       return;
+    }
+
+    // Back link when this annotation was reached from a multi-annotation block.
+    if (this.blockScope) {
+      const list = annotationsForBlock(store.getAll(), this.blockScope.blockId, this.blockScope.notePath);
+      if (list.length > 1) {
+        const back = this.el.createDiv({ cls: 'glossa-popover-back', attr: { role: 'button' } });
+        setIcon(back, 'chevron-left');
+        back.createSpan({ text: 'All annotations' });
+        this.registerDomEvent(back, 'click', () => {
+          this.annotationId = null;
+          this.render();
+        });
+      }
     }
 
     const header = this.el.createDiv({ cls: 'glossa-popover-header' });
@@ -88,13 +180,15 @@ export class AnnotationPopover extends Component {
       attr: { placeholder: 'Annotation…' },
     });
     textarea.value = a.body;
-    this.register(
-      (() => {
-        const handler = () => store.updateBody(a.id, textarea.value);
-        textarea.addEventListener('blur', handler);
-        return () => textarea.removeEventListener('blur', handler);
-      })(),
-    );
+    const save = () => store.updateBody(a.id, textarea.value);
+    this.registerDomEvent(textarea, 'blur', save);
+    this.registerDomEvent(textarea, 'keydown', (e) => {
+      if (isSaveShortcut(e)) {
+        e.preventDefault();
+        save();
+        new Notice('Glossa: annotation saved.');
+      }
+    });
 
     const actions = this.el.createDiv({ cls: 'glossa-popover-actions' });
 
@@ -112,12 +206,37 @@ export class AnnotationPopover extends Component {
       this.actionBtn(actions, 'link', 'Re-anchor to selection', () => void this.reanchor(a.id));
     }
 
-    this.actionBtn(actions, 'trash-2', 'Delete', () => {
-      store.delete(a.id);
+    this.renderDeleteControl(actions, a.id);
+
+    if (this.focusBody) {
+      this.focusBody = false;
+      window.setTimeout(() => {
+        textarea.focus();
+        const len = textarea.value.length;
+        textarea.setSelectionRange(len, len);
+      }, 0);
+    }
+  }
+
+  /** Delete is explicit only: first click arms a confirm, second click deletes. */
+  private renderDeleteControl(parent: HTMLElement, annotationId: string): void {
+    const btn = parent.createEl('button', {
+      cls: 'glossa-popover-btn glossa-popover-btn--danger',
+      attr: { 'aria-label': 'Delete' },
+    });
+    setIcon(btn, 'trash-2');
+    const label = btn.createSpan({ text: 'Delete' });
+    let armed = false;
+    this.registerDomEvent(btn, 'click', () => {
+      if (!armed) {
+        armed = true;
+        btn.addClass('is-armed');
+        label.setText('Confirm delete');
+        return;
+      }
+      this.deps.store.delete(annotationId);
       this.close();
     });
-
-    window.setTimeout(() => textarea.focus(), 0);
   }
 
   private actionBtn(parent: HTMLElement, icon: string, label: string, onClick: () => void): void {
@@ -156,6 +275,7 @@ export class AnnotationPopover extends Component {
   }
 
   onunload(): void {
+    this.cleanupAutoUpdate?.();
     this.el.remove();
   }
 }

@@ -150,6 +150,66 @@
   font-size: 0.85em;
 }
 
+.glossa-popover-btn--danger.is-armed {
+  border-color: var(--text-error);
+  color: var(--text-error);
+}
+
+.glossa-popover-btn--danger.is-armed:hover {
+  background: var(--background-modifier-error-hover);
+}
+
+/* Multi-annotation list (a block with >1 annotation) */
+
+.glossa-popover-list-header {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 0.4em;
+}
+
+.glossa-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.glossa-popover-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.35em 0.5em;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.glossa-popover-list-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+.glossa-popover-list-item-body {
+  font-size: 0.85em;
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glossa-popover-back {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  font-size: 0.8em;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 0.4em;
+}
+
+.glossa-popover-back:hover {
+  color: var(--text-normal);
+}
+
 /* ---------- Panel ---------- */
 
 .glossa-panel-tabs {
