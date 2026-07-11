@@ -216,6 +216,16 @@ describe('recomputeOrphans', () => {
     assert.equal(next.annotations[0]!.status, 'resolved');
   });
 
+  it('re-activates an orphaned annotation when its blockId reappears in the note (re-anchoring detection)', () => {
+    const store: AnnotationStore = {
+      version: 1,
+      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'gl-present', status: 'orphaned' })],
+    };
+    const next = recomputeOrphans(store, 'Note.md', 'Some text.\n\n^gl-present\n', 7000);
+    assert.equal(next.annotations[0]!.status, 'active');
+    assert.equal(next.annotations[0]!.updated, 7000);
+  });
+
   it('re-orphaning is idempotent — no timestamp churn when status does not change', () => {
     const store: AnnotationStore = {
       version: 1,
