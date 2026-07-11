@@ -1,0 +1,9 @@
+{
+  "id": "glossa",
+  "name": "Glossa",
+  "version": "0.1.0",
+  "minAppVersion": "1.10.0",
+  "description": "Glossa — Obsidian plugin",
+  "author": "Mario Miletta",
+  "isDesktopOnly": true
+}

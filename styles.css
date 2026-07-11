@@ -1,0 +1,10 @@
+/* ===== Glossa ===== */
+/* All selectors in this file use the `.glossa-` prefix. */
+
+.glossa-container {
+  background: var(--background-secondary);
+}
+
+.glossa-hint {
+  color: var(--text-muted);
+}
