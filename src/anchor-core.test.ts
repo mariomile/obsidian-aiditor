@@ -15,15 +15,18 @@ describe('generateBlockId', () => {
   });
 
   it('avoids collisions against an existing id set', () => {
+    // generateBlockId draws rand() 6 times (once per id char). The first full
+    // 6-draw chunk at 0.5 yields gl-iiiiii (which we seed as already-existing),
+    // so the retry loop MUST fire; the next chunk at 0.999999 yields gl-zzzzzz.
     let calls = 0;
-    // Force the first two draws to collide, third is free.
     const rand = () => {
       calls++;
-      return calls <= 2 ? 0.5 : 0.999999;
+      return calls <= 6 ? 0.5 : 0.999999;
     };
-    const existing = new Set([generateBlockId(() => 0.5)]);
+    const existing = new Set([generateBlockId(() => 0.5)]); // gl-iiiiii
     const id = generateBlockId(rand, existing);
     assert.ok(!existing.has(id));
+    assert.equal(id, 'gl-zzzzzz'); // proves the retry loop actually fired
   });
 });
 
