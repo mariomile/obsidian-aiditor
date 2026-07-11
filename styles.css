@@ -236,9 +236,8 @@
   border-bottom-color: var(--interactive-accent);
 }
 
-.glossa-panel-tab-count {
-  font-size: 0.75em;
-  color: var(--text-faint);
+.glossa-panel-tab-label {
+  font-size: 0.85em;
 }
 
 .glossa-panel-item {
@@ -267,6 +266,45 @@
   font-size: 0.85em;
   color: var(--text-normal);
   white-space: pre-wrap;
+}
+
+.glossa-panel-item-time {
+  font-size: 0.75em;
+  color: var(--text-faint);
+  margin-top: 0.3em;
+}
+
+.glossa-panel-item-actions {
+  display: flex;
+  gap: 0.4em;
+  margin-top: 0.5em;
+  cursor: default;
+}
+
+.glossa-panel-item-action {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.8em;
+  padding: 0.25em 0.5em;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.glossa-panel-item-action:hover {
+  background: var(--background-modifier-hover);
+}
+
+.glossa-panel-item-action--danger.is-armed {
+  border-color: var(--text-error);
+  color: var(--text-error);
+}
+
+.glossa-panel-item-action--danger.is-armed:hover {
+  background: var(--background-modifier-error-hover);
 }
 
 .glossa-panel-empty {
