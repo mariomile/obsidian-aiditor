@@ -8,3 +8,210 @@
 .glossa-hint {
   color: var(--text-muted);
 }
+
+/* ---------- Gutter (Live Preview) ---------- */
+
+.glossa-gutter {
+  width: 1.4em;
+}
+
+.glossa-gutter-marker,
+.glossa-gutter-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0.1em auto;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.75em;
+  line-height: 1;
+}
+
+.glossa-gutter-marker {
+  background: var(--interactive-accent);
+  opacity: 0.75;
+}
+
+.glossa-gutter-marker:hover {
+  opacity: 1;
+}
+
+.glossa-gutter-badge {
+  color: var(--text-on-accent);
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+.glossa-gutter-plus {
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.glossa-gutter:hover .glossa-gutter-plus {
+  opacity: 0.6;
+}
+
+.glossa-gutter-plus:hover {
+  opacity: 1 !important;
+  color: var(--text-accent);
+}
+
+/* ---------- Popover ---------- */
+
+.glossa-popover {
+  position: absolute;
+  z-index: var(--layer-popover, 70);
+  width: 280px;
+  padding: 0.75em;
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-l);
+}
+
+.glossa-popover-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.4em;
+}
+
+.glossa-status {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1em 0.5em;
+  border-radius: var(--radius-s);
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.glossa-status--active {
+  background: var(--color-green, var(--interactive-accent));
+  color: var(--text-on-accent);
+}
+
+.glossa-status--orphaned {
+  background: var(--color-orange, var(--text-error));
+  color: var(--text-on-accent);
+}
+
+.glossa-popover-quote {
+  font-size: 0.85em;
+  font-style: italic;
+  color: var(--text-muted);
+  border-left: 2px solid var(--text-faint);
+  padding-left: 0.5em;
+  margin-bottom: 0.5em;
+  max-height: 4em;
+  overflow-y: auto;
+}
+
+.glossa-popover-body {
+  width: 100%;
+  min-height: 4em;
+  resize: vertical;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: 0.4em;
+  font-family: inherit;
+  font-size: 0.9em;
+}
+
+.glossa-popover-actions {
+  display: flex;
+  gap: 0.4em;
+  margin-top: 0.5em;
+}
+
+.glossa-popover-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.8em;
+  padding: 0.25em 0.5em;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.glossa-popover-btn:hover {
+  background: var(--background-modifier-hover);
+}
+
+.glossa-popover-empty {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+/* ---------- Panel ---------- */
+
+.glossa-panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--background-modifier-border);
+  margin-bottom: 0.5em;
+}
+
+.glossa-panel-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  padding: 0.4em 0;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+}
+
+.glossa-panel-tab.is-active {
+  color: var(--text-normal);
+  border-bottom-color: var(--interactive-accent);
+}
+
+.glossa-panel-tab-count {
+  font-size: 0.75em;
+  color: var(--text-faint);
+}
+
+.glossa-panel-item {
+  padding: 0.5em;
+  margin-bottom: 0.4em;
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+  cursor: pointer;
+}
+
+.glossa-panel-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+.glossa-panel-item-quote {
+  font-size: 0.8em;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: 0.25em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glossa-panel-item-body {
+  font-size: 0.85em;
+  color: var(--text-normal);
+  white-space: pre-wrap;
+}
+
+.glossa-panel-empty {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  padding: 1em 0.5em;
+  text-align: center;
+}
