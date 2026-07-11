@@ -67,6 +67,15 @@ describe('findAllBlockIds', () => {
   });
 });
 
+// Apply a LineEdit to a lines array exactly as the coupled applier does, so
+// tests can assert on the resulting document (not just the edit descriptor).
+function applyLineEdit(lines: string[], edit: { fromLine: number; toLine: number; insert: string[] }): string[] {
+  const before = lines.slice(0, edit.fromLine);
+  const afterStart = edit.toLine >= edit.fromLine ? edit.toLine + 1 : edit.fromLine;
+  const after = lines.slice(afterStart);
+  return [...before, ...edit.insert, ...after];
+}
+
 describe('standaloneBlockIdInsertion', () => {
   it('inserts a blank line + standalone ^id line after a paragraph block', () => {
     const lines = ['First line.', 'Second line.', '', 'Next para.'];
@@ -96,6 +105,52 @@ describe('standaloneBlockIdInsertion', () => {
       toLine: 2,
       insert: ['', '^gl-tbl001'],
     });
+  });
+
+  it('produces a correct document after a TABLE block — id standalone, table rows untouched', () => {
+    const lines = ['| a | b |', '| - | - |', '| 1 | 2 |', '', 'After.'];
+    const edit = standaloneBlockIdInsertion(lines, { startLine: 0, endLine: 2 }, 'gl-tbl001');
+    const result = applyLineEdit(lines, edit);
+    assert.deepEqual(result, ['| a | b |', '| - | - |', '| 1 | 2 |', '', '^gl-tbl001', '', 'After.']);
+    // no table row was mutated to carry an inline ^id
+    assert.ok(result.every((l) => !/\|.*\^gl-/.test(l)));
+  });
+
+  it('produces a correct document after an HR block — id on its own line, hr not mutated inline', () => {
+    const lines = ['Intro.', '', '---', '', 'Outro.'];
+    const edit = standaloneBlockIdInsertion(lines, { startLine: 2, endLine: 2 }, 'gl-hr0001');
+    const result = applyLineEdit(lines, edit);
+    assert.deepEqual(result, ['Intro.', '', '---', '', '^gl-hr0001', '', 'Outro.']);
+    // the hr line itself is still a bare '---', never '--- ^id'
+    assert.equal(result[2], '---');
+  });
+
+  it('inserts correctly at end-of-file with NO trailing newline', () => {
+    const text = 'Only paragraph, no trailing newline';
+    const lines = text.split('\n');
+    const edit = standaloneBlockIdInsertion(lines, { startLine: 0, endLine: 0 }, 'gl-eof001');
+    const result = applyLineEdit(lines, edit);
+    assert.deepEqual(result, ['Only paragraph, no trailing newline', '', '^gl-eof001']);
+    // re-joined, the id is a standalone line and the original text is intact
+    assert.equal(result.join('\n'), 'Only paragraph, no trailing newline\n\n^gl-eof001');
+  });
+
+  it('inserts a standalone id line (blank-separated, composer convention) after a LIST ITEM block', () => {
+    const lines = ['- first item', '- second item', '', 'After.'];
+    const edit = standaloneBlockIdInsertion(lines, { startLine: 1, endLine: 1 }, 'gl-li0001');
+    const result = applyLineEdit(lines, edit);
+    assert.deepEqual(result, ['- first item', '- second item', '', '^gl-li0001', '', 'After.']);
+    // the id is standalone, never appended inline to a list marker line
+    assert.ok(result.every((l) => !/^\s*[-*+].*\^gl-/.test(l)));
+  });
+
+  it('inserts a standalone id line (blank-separated) after a BLOCKQUOTE block', () => {
+    const lines = ['> a quoted', '> paragraph', '', 'After.'];
+    const edit = standaloneBlockIdInsertion(lines, { startLine: 0, endLine: 1 }, 'gl-bq0001');
+    const result = applyLineEdit(lines, edit);
+    assert.deepEqual(result, ['> a quoted', '> paragraph', '', '^gl-bq0001', '', 'After.']);
+    // no blockquote line carries an inline ^id
+    assert.ok(result.every((l) => !/^>.*\^gl-/.test(l)));
   });
 });
 

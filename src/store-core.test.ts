@@ -31,6 +31,24 @@ function makeAnnotation(overrides: Partial<Annotation> = {}): Annotation {
 }
 
 describe('addAnnotation', () => {
+  it('is deterministic — same store + input + now yields the same id (no Math.random / no module state)', () => {
+    const store = emptyStore();
+    const input = {
+      blockId: 'gl-abc123',
+      notePath: 'Note.md',
+      quote: 'hi',
+      prefix: '',
+      suffix: '',
+      body: 'body text',
+      color: 'default',
+    };
+    const a = addAnnotation(store, input, 5000);
+    const b = addAnnotation(store, input, 5000);
+    assert.equal(a.id, b.id);
+    // and the id must be a-prefixed
+    assert.match(a.id, /^a-/);
+  });
+
   it('appends a new active annotation with created/updated timestamps', () => {
     const store = emptyStore();
     const result = addAnnotation(store, {

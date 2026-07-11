@@ -1,19 +1,21 @@
 /**
  * Pure CRUD + filters + status transitions over an in-memory AnnotationStore,
  * plus orphan recomputation given a note's text. No Obsidian imports, no clock —
- * callers pass `Date.now()` in at the coupled call sites (src/store.ts, src/anchor.ts).
+ * callers inject the timestamp at the coupled call sites (src/store.ts, src/anchor.ts).
  */
 
 import type { Annotation, AnnotationStatus, AnnotationStore } from './model.ts';
 import { findAllBlockIds } from './anchor-core.ts';
 
-let counter = 0;
-
-/** Generates a reasonably-unique annotation id without relying on a global clock. */
-function newAnnotationId(now: number): string {
-  counter = (counter + 1) % 1_000_000;
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `a-${now.toString(36)}-${counter.toString(36)}-${rand}`;
+/**
+ * Derives a stable annotation id purely from the injected timestamp and the
+ * store's current size — no clock read, no `Math.random`, no module-level
+ * mutable state, so `addAnnotation` is deterministic and unit-testable.
+ * The `seq` (existing annotation count) disambiguates multiple adds sharing
+ * the same millisecond timestamp within one store.
+ */
+function newAnnotationId(now: number, seq: number): string {
+  return `a-${now.toString(36)}-${seq.toString(36)}`;
 }
 
 export interface NewAnnotationInput {
@@ -37,7 +39,7 @@ export function addAnnotation(
   input: NewAnnotationInput,
   now: number,
 ): AddAnnotationResult {
-  const id = newAnnotationId(now);
+  const id = newAnnotationId(now, store.annotations.length);
   const annotation: Annotation = {
     id,
     blockId: input.blockId,
