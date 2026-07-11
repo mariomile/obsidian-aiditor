@@ -3,7 +3,7 @@
   "name": "Glossa",
   "version": "0.1.0",
   "minAppVersion": "1.10.0",
-  "description": "Glossa — Obsidian plugin",
+  "description": "Durable, resolvable margin annotations anchored to blocks.",
   "author": "Mario Miletta",
   "isDesktopOnly": true
 }
