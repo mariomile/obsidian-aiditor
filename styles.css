@@ -9,35 +9,20 @@
   color: var(--text-muted);
 }
 
-/* ---------- Gutter (Live Preview) ---------- */
+/* ---------- Inline comment highlight (Live Preview) ---------- */
+/* Commented text is highlighted in place — no gutter, so the editor keeps its
+   full width. The span itself is the click target that opens the popover. */
 
-.aiditor-gutter {
-  width: 1.4em;
-}
-
-.aiditor-gutter-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.1em;
-  height: 1.1em;
-  margin: 0.1em auto;
-  border-radius: 50%;
+.aiditor-comment-mark {
+  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.22);
+  border-bottom: 1px solid hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.55);
+  border-radius: 2px;
   cursor: pointer;
-  font-size: 0.75em;
-  line-height: 1;
-  background: var(--interactive-accent);
-  opacity: 0.75;
+  transition: background 0.1s ease;
 }
 
-.aiditor-gutter-marker:hover {
-  opacity: 1;
-}
-
-.aiditor-gutter-badge {
-  color: var(--text-on-accent);
-  font-size: 0.7em;
-  font-weight: 600;
+.aiditor-comment-mark:hover {
+  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.38);
 }
 
 /* ---------- Popover ---------- */

@@ -1,5 +1,5 @@
 /**
- * Settings tab (design §8/§9): store path override, gutter side, hotkey hint.
+ * Settings tab (design §8/§9): store path override, hotkey hint.
  * `AIditorSettings`/`DEFAULT_SETTINGS` live in the pure `settings-core.ts` (no
  * Obsidian imports, unit-testable) and are re-exported here; this module adds
  * only the Obsidian-coupled `PluginSettingTab` UI.
@@ -14,9 +14,9 @@
 import { PluginSettingTab, Setting, type App } from 'obsidian';
 import type AIditorPlugin from './main.ts';
 import { STORE_PATH } from './store.ts';
-import { DEFAULT_SETTINGS, type GutterSide } from './settings-core.ts';
+import { DEFAULT_SETTINGS } from './settings-core.ts';
 
-export type { AIditorSettings, GutterSide } from './settings-core.ts';
+export type { AIditorSettings } from './settings-core.ts';
 export { DEFAULT_SETTINGS } from './settings-core.ts';
 
 export class AIditorSettingTab extends PluginSettingTab {
@@ -41,20 +41,6 @@ export class AIditorSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.storePath)
           .onChange(async (v) => {
             this.plugin.settings.storePath = v.trim() || DEFAULT_SETTINGS.storePath;
-            await this.plugin.saveSettings();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName('Gutter marker side')
-      .setDesc('Which side of the editor shows the annotation marker in Live Preview.')
-      .addDropdown((d) =>
-        d
-          .addOption('left', 'Left')
-          .addOption('right', 'Right')
-          .setValue(this.plugin.settings.gutterSide)
-          .onChange(async (v) => {
-            this.plugin.settings.gutterSide = v as GutterSide;
             await this.plugin.saveSettings();
           }),
       );

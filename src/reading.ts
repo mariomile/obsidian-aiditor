@@ -31,6 +31,6 @@ import type { MarkdownPostProcessor } from 'obsidian';
 export function aiditorReadingPostProcessor(): MarkdownPostProcessor {
   return (_el, _ctx) => {
     // TODO(reading-view markers): see module header. Deferred to fast-follow;
-    // Live Preview (src/gutter.ts) is the supported MVP surface.
+    // Live Preview inline highlights (src/marks.ts) are the supported surface.
   };
 }

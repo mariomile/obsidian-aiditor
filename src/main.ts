@@ -5,7 +5,7 @@ import { wireOrphanRecompute } from './anchor.ts';
 import { createAnnotation, type OpenAnnotationPopover } from './create.ts';
 import { createAIditorApi, type AIditorApi } from './api.ts';
 import { AnnotationPopover } from './popover.ts';
-import { aiditorGutterExtension, refreshAIditorGutterEffect, type GutterHost } from './gutter.ts';
+import { aiditorMarksExtension, refreshAIditorMarksEffect, type MarksHost } from './marks.ts';
 import { AIditorPanelView, VIEW_TYPE_AIDITOR_PANEL, type PanelHost } from './panel.ts';
 import { aiditorReadingPostProcessor } from './reading.ts';
 import { DEFAULT_SETTINGS, AIditorSettingTab, type AIditorSettings } from './settings.ts';
@@ -38,28 +38,25 @@ export default class AIditorPlugin extends Plugin {
     // every active-leaf-change (design §6).
     this.unwireOrphanRecompute = wireOrphanRecompute(this.app, this.store);
 
-    // Gutter markers stay in sync with store mutations that don't touch the
-    // note text (resolve/reopen/delete) via each editor's own ViewPlugin
-    // subscription (GutterHost.onStoreChange), so no global refresh is wired
-    // here — see aiditorGutterExtension.
-
-    const gutterHost: GutterHost = {
-      countForBlockId: (blockId) => {
+    // Commented text is highlighted INLINE (not in a gutter — a gutter reserves
+    // a column and narrows the editor). Each editor's ViewPlugin rebuilds its
+    // decorations on doc/viewport change and on store mutations that don't
+    // touch the note text (resolve/reopen/delete) via MarksHost.onStoreChange.
+    const marksHost: MarksHost = {
+      activeAnnotations: () => {
         const notePath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path;
         return this.store
           .getAll()
-          .filter((a) => a.blockId === blockId && a.status === 'active' && (!notePath || a.notePath === notePath))
-          .length;
+          .filter((a) => a.status === 'active' && (!notePath || a.notePath === notePath));
       },
-      onMarkerClick: (blockId, dom) => {
-        const notePath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path;
+      onMarkClick: (annotationId, dom) => {
         const rect = dom.getBoundingClientRect();
         const anchor: VirtualElement = { getBoundingClientRect: () => rect };
-        this.popover.openForBlock(blockId, notePath ?? undefined, anchor);
+        this.popover.open(annotationId, anchor);
       },
       onStoreChange: (listener) => this.store.onChange(() => listener()),
     };
-    this.registerEditorExtension(aiditorGutterExtension(gutterHost, this.settings.gutterSide));
+    this.registerEditorExtension(aiditorMarksExtension(marksHost));
 
     // Reading-view marker seam — intentionally stubbed for MVP (design §11.1,
     // src/reading.ts). Registering it now means picking the real
@@ -97,7 +94,7 @@ export default class AIditorPlugin extends Plugin {
       this.app.workspace.on('active-leaf-change', (leaf) => {
         const view = leaf?.view;
         if (view instanceof MarkdownView && view.file) {
-          this.refreshAllGutters();
+          this.refreshAllMarks();
         }
       }),
     );
@@ -131,12 +128,12 @@ export default class AIditorPlugin extends Plugin {
     }
   }
 
-  private refreshAllGutters(): void {
+  private refreshAllMarks(): void {
     this.app.workspace.iterateAllLeaves((leaf) => {
       const view = leaf.view;
       if (!(view instanceof MarkdownView)) return;
       const cm = (view.editor as unknown as { cm?: { dispatch: (spec: unknown) => void } }).cm;
-      cm?.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
+      cm?.dispatch({ effects: refreshAIditorMarksEffect.of(null) });
     });
   }
 

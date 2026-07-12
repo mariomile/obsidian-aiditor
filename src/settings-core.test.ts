@@ -7,12 +7,8 @@ describe('DEFAULT_SETTINGS', () => {
     assert.equal(DEFAULT_SETTINGS.storePath, '_system/annotations/store.json');
   });
 
-  it('defaults gutterSide to left', () => {
-    assert.equal(DEFAULT_SETTINGS.gutterSide, 'left');
-  });
-
-  it('has exactly the two documented settings keys', () => {
-    assert.deepEqual(Object.keys(DEFAULT_SETTINGS).sort(), ['gutterSide', 'storePath']);
+  it('has exactly the one documented settings key', () => {
+    assert.deepEqual(Object.keys(DEFAULT_SETTINGS).sort(), ['storePath']);
   });
 
   it('DEFAULT_STORE_PATH matches DEFAULT_SETTINGS.storePath (single source of truth)', () => {
