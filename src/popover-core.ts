@@ -24,3 +24,23 @@ export function annotationsForBlock(
 export function isSaveShortcut(e: { key: string; metaKey: boolean; ctrlKey: boolean }): boolean {
   return e.key === 'Enter' && (e.metaKey || e.ctrlKey);
 }
+
+/**
+ * Whether an outside `mousedown` should dismiss the popover.
+ *
+ * Root-cause guard (bug 2026-07-12): every entry point that opens the popover
+ * is itself a mouse gesture — clicking a highlighted span, a Composer menu
+ * item, or a Selection Toolbar button. That gesture's own `mousedown` reaches
+ * `document` while the popover is (or is becoming) visible and, being outside
+ * the popover, would immediately dismiss it — so it opened and vanished in the
+ * same click. `justOpened` marks the tick in which the popover opened; a
+ * mousedown in that window is the opening gesture itself and must be ignored.
+ * Real outside clicks on later ticks (justOpened cleared) still dismiss.
+ */
+export function shouldDismissOnOutsideMousedown(state: {
+  visible: boolean;
+  justOpened: boolean;
+  targetInsidePopover: boolean;
+}): boolean {
+  return state.visible && !state.justOpened && !state.targetInsidePopover;
+}

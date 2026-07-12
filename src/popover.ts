@@ -16,7 +16,7 @@ import { Component, MarkdownView, Notice, setIcon, type App } from 'obsidian';
 import { computePosition, autoUpdate, offset, flip, shift, type VirtualElement } from '@floating-ui/dom';
 import { extractPrefix, extractSuffix, type BlockSpan } from './anchor-core.ts';
 import { ensureBlockId } from './anchor.ts';
-import { annotationsForBlock, isSaveShortcut } from './popover-core.ts';
+import { annotationsForBlock, isSaveShortcut, shouldDismissOnOutsideMousedown } from './popover-core.ts';
 import type { AnnotationVaultStore } from './store.ts';
 
 const CONTEXT_LEN = 32;
@@ -39,6 +39,8 @@ export class AnnotationPopover extends Component {
   private blockScope: { blockId: string; notePath: string | undefined } | null = null;
   private focusBody = false;
   private cleanupAutoUpdate: (() => void) | null = null;
+  /** True only for the tick in which the popover opened — see show()/shouldDismissOnOutsideMousedown. */
+  private justOpened = false;
 
   constructor(private deps: PopoverDeps) {
     super();
@@ -46,7 +48,15 @@ export class AnnotationPopover extends Component {
     this.el.hide();
 
     this.registerDomEvent(document, 'mousedown', (e) => {
-      if (this.visible && !this.el.contains(e.target as Node)) this.close();
+      if (
+        shouldDismissOnOutsideMousedown({
+          visible: this.visible,
+          justOpened: this.justOpened,
+          targetInsidePopover: this.el.contains(e.target as Node),
+        })
+      ) {
+        this.close();
+      }
     });
     this.registerDomEvent(document, 'keydown', (e) => {
       if (this.visible && e.key === 'Escape') this.close();
@@ -85,6 +95,12 @@ export class AnnotationPopover extends Component {
     this.render();
     this.el.show();
     this.visible = true;
+    // Ignore the opening gesture's own outside-mousedown; clear on the next tick
+    // so genuine later outside clicks still dismiss (see the document handler).
+    this.justOpened = true;
+    window.setTimeout(() => {
+      this.justOpened = false;
+    }, 0);
     this.cleanupAutoUpdate?.();
     this.cleanupAutoUpdate = autoUpdate(anchor, this.el, () => this.position(anchor));
   }

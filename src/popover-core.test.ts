@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { annotationsForBlock, isSaveShortcut } from './popover-core.ts';
+import { annotationsForBlock, isSaveShortcut, shouldDismissOnOutsideMousedown } from './popover-core.ts';
 import { type Annotation } from './model.ts';
 
 function ann(overrides: Partial<Annotation>): Annotation {
@@ -62,5 +62,37 @@ describe('isSaveShortcut', () => {
 
   it('is false for Cmd+other-key', () => {
     assert.equal(isSaveShortcut({ key: 'a', metaKey: true, ctrlKey: false }), false);
+  });
+});
+
+describe('shouldDismissOnOutsideMousedown', () => {
+  it('does NOT dismiss on the opening gesture (justOpened) — the bug fix', () => {
+    // The click that opened the popover also fires an outside mousedown in the
+    // same tick; it must be ignored, or the popover opens and vanishes at once.
+    assert.equal(
+      shouldDismissOnOutsideMousedown({ visible: true, justOpened: true, targetInsidePopover: false }),
+      false,
+    );
+  });
+
+  it('dismisses on a genuine outside mousedown once justOpened has cleared', () => {
+    assert.equal(
+      shouldDismissOnOutsideMousedown({ visible: true, justOpened: false, targetInsidePopover: false }),
+      true,
+    );
+  });
+
+  it('never dismisses when the mousedown is inside the popover', () => {
+    assert.equal(
+      shouldDismissOnOutsideMousedown({ visible: true, justOpened: false, targetInsidePopover: true }),
+      false,
+    );
+  });
+
+  it('never dismisses when the popover is not visible', () => {
+    assert.equal(
+      shouldDismissOnOutsideMousedown({ visible: false, justOpened: false, targetInsidePopover: false }),
+      false,
+    );
   });
 });
