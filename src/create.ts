@@ -2,7 +2,7 @@
  * The single createAnnotation flow all entry points funnel into (design §5):
  * command, gutter "+" affordance, and (indirectly, via a separate matching
  * path) the public API in api.ts. Reads the current selection or the block
- * under the caret, ensures a ^gl-id, captures quote+context, creates the
+ * under the caret, ensures a ^ai-id, captures quote+context, creates the
  * record as 'active', then hands off to a typed popover-open callback.
  */
 
@@ -30,7 +30,7 @@ export interface CreateAnnotationDeps {
 
 export class NoActiveNoteError extends Error {
   constructor() {
-    super('Glossa: no active markdown note with an editor to annotate.');
+    super('AIditor: no active markdown note with an editor to annotate.');
     this.name = 'NoActiveNoteError';
   }
 }
@@ -46,7 +46,7 @@ function blockSpanAtLine(lines: string[], line: number): BlockSpan {
 
 /**
  * The createAnnotation flow: capture selection-or-caret-block, ensure a
- * ^gl-id, create the annotation record, and invoke the popover-open seam.
+ * ^ai-id, create the annotation record, and invoke the popover-open seam.
  * Returns the new annotation id.
  */
 export async function createAnnotation({ app, store, openPopover }: CreateAnnotationDeps): Promise<string> {

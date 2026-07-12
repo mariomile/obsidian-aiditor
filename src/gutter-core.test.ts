@@ -9,9 +9,9 @@ function visibleLines(doc: string, visible: number[]): VisibleLine[] {
 }
 
 describe('deriveGutterMarkers', () => {
-  it('places a marker on the content line above a ^gl-id whose blockId has ≥1 active annotation', () => {
-    const doc = ['A paragraph.', '', '^gl-abc123', '', 'Another.'].join('\n');
-    const counts = new Map([['gl-abc123', 1]]);
+  it('places a marker on the content line above a ^ai-id whose blockId has ≥1 active annotation', () => {
+    const doc = ['A paragraph.', '', '^ai-abc123', '', 'Another.'].join('\n');
+    const counts = new Map([['ai-abc123', 1]]);
     const result = deriveGutterMarkers(
       visibleLines(doc, [0, 1, 2, 3, 4]),
       (id) => counts.get(id) ?? 0,
@@ -19,13 +19,13 @@ describe('deriveGutterMarkers', () => {
     const markers = result.filter((m) => m.kind === 'marker');
     assert.equal(markers.length, 1);
     assert.equal(markers[0]!.line, 0);
-    assert.equal(markers[0]!.blockId, 'gl-abc123');
+    assert.equal(markers[0]!.blockId, 'ai-abc123');
     assert.equal(markers[0]!.count, 1);
   });
 
   it('shows the count when a block has more than one active annotation', () => {
-    const doc = ['A paragraph.', '^gl-abc123'].join('\n');
-    const counts = new Map([['gl-abc123', 3]]);
+    const doc = ['A paragraph.', '^ai-abc123'].join('\n');
+    const counts = new Map([['ai-abc123', 3]]);
     const result = deriveGutterMarkers(visibleLines(doc, [0, 1]), (id) => counts.get(id) ?? 0);
     const marker = result.find((m) => m.kind === 'marker');
     assert.ok(marker);
@@ -33,24 +33,24 @@ describe('deriveGutterMarkers', () => {
   });
 
   it('omits the marker when the blockId has zero active annotations', () => {
-    const doc = ['A paragraph.', '^gl-abc123'].join('\n');
+    const doc = ['A paragraph.', '^ai-abc123'].join('\n');
     const result = deriveGutterMarkers(visibleLines(doc, [0, 1]), () => 0);
     assert.equal(result.filter((m) => m.kind === 'marker').length, 0);
   });
 
-  it('does NOT scan lines outside the visible ranges — a ^gl-id in a hidden range yields no marker', () => {
-    const doc = ['Visible top.', '^gl-visible', 'Hidden middle.', '^gl-hidden', 'Visible bottom.'].join('\n');
-    const counts = new Map([['gl-visible', 1], ['gl-hidden', 1]]);
-    // Only lines 0,1 and 4 are visible; the hidden ^gl-hidden (line 3) is not scanned.
+  it('does NOT scan lines outside the visible ranges — a ^ai-id in a hidden range yields no marker', () => {
+    const doc = ['Visible top.', '^ai-visible', 'Hidden middle.', '^ai-hidden', 'Visible bottom.'].join('\n');
+    const counts = new Map([['ai-visible', 1], ['ai-hidden', 1]]);
+    // Only lines 0,1 and 4 are visible; the hidden ^ai-hidden (line 3) is not scanned.
     const result = deriveGutterMarkers(
       visibleLines(doc, [0, 1, 4]),
       (id) => counts.get(id) ?? 0,
     );
     const markerIds = result.filter((m) => m.kind === 'marker').map((m) => m.blockId);
-    assert.deepEqual(markerIds, ['gl-visible']);
+    assert.deepEqual(markerIds, ['ai-visible']);
   });
 
-  it('offers a ＋ affordance on a block-start line that has no ^gl-id yet', () => {
+  it('offers a ＋ affordance on a block-start line that has no ^ai-id yet', () => {
     const doc = ['First block.', '', 'Second block.'].join('\n');
     const result = deriveGutterMarkers(visibleLines(doc, [0, 1, 2]), () => 0);
     const plusLines = result.filter((m) => m.kind === 'plus').map((m) => m.line).sort((a, b) => a - b);
@@ -58,18 +58,18 @@ describe('deriveGutterMarkers', () => {
   });
 
   it('does not offer ＋ on a block that already carries an annotated marker', () => {
-    const doc = ['Annotated block.', '^gl-abc123'].join('\n');
-    const counts = new Map([['gl-abc123', 1]]);
+    const doc = ['Annotated block.', '^ai-abc123'].join('\n');
+    const counts = new Map([['ai-abc123', 1]]);
     const result = deriveGutterMarkers(visibleLines(doc, [0, 1]), (id) => counts.get(id) ?? 0);
     assert.equal(result.filter((m) => m.kind === 'plus' && m.line === 0).length, 0);
   });
 
-  it('does not offer ＋ on the ^gl-id line itself or on blank lines', () => {
-    const doc = ['Text.', '', '^gl-abc123'].join('\n');
+  it('does not offer ＋ on the ^ai-id line itself or on blank lines', () => {
+    const doc = ['Text.', '', '^ai-abc123'].join('\n');
     const result = deriveGutterMarkers(visibleLines(doc, [0, 1, 2]), () => 0);
     const plusLines = result.filter((m) => m.kind === 'plus').map((m) => m.line);
     assert.ok(!plusLines.includes(1)); // blank
-    assert.ok(!plusLines.includes(2)); // ^gl-id line
+    assert.ok(!plusLines.includes(2)); // ^ai-id line
   });
 
   it('treats a block-start as the first non-blank line after a blank line or doc start', () => {

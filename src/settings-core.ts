@@ -6,7 +6,7 @@
 
 export type GutterSide = 'left' | 'right';
 
-export interface GlossaSettings {
+export interface AIditorSettings {
   /** Vault-relative path to the sidecar store (design §4). Text-input override. */
   storePath: string;
   /** Which side of the editor shows the annotation gutter marker in Live Preview. */
@@ -15,7 +15,7 @@ export interface GlossaSettings {
 
 export const DEFAULT_STORE_PATH = '_system/annotations/store.json';
 
-export const DEFAULT_SETTINGS: GlossaSettings = {
+export const DEFAULT_SETTINGS: AIditorSettings = {
   storePath: DEFAULT_STORE_PATH,
   gutterSide: 'left',
 };

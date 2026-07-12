@@ -7,9 +7,9 @@
  * is true, and again whenever the store emits a change event. Scanning only
  * the visible window (via the pure `deriveGutterMarkers`) keeps placement
  * correct across folds and long docs: a folded region simply drops out of the
- * input, so a marker can never desync from its `^gl-id`.
+ * input, so a marker can never desync from its `^ai-id`.
  *
- * Markers: a subtle dot on the content line of any block whose `^gl-id` has
+ * Markers: a subtle dot on the content line of any block whose `^ai-id` has
  * ≥1 active annotation (count badge when >1); click → popover. A "＋"
  * affordance appears on the gutter of the hovered block and funnels into the
  * shared createAnnotation flow.
@@ -17,7 +17,7 @@
  * CM6 gotcha (prior vault experience): `posAtCoords` never resolves inside
  * `.cm-embed-block` (tables/callouts/embeds in Live Preview). The hover
  * hit-test therefore falls back through `closest('.cm-embed-block')` +
- * `posAtDOM` + an element-rect scan. The `^gl-id` line itself is always a
+ * `posAtDOM` + an element-rect scan. The `^ai-id` line itself is always a
  * plain line, which is why markers key off it.
  */
 
@@ -25,10 +25,10 @@ import { gutter, GutterMarker, ViewPlugin, EditorView, type PluginValue, type Vi
 import { RangeSet, RangeSetBuilder, StateEffect, type Extension } from '@codemirror/state';
 import { deriveGutterMarkers, type GutterMarkerSpec, type VisibleLine } from './gutter-core.ts';
 
-const GUTTER_CLASS = 'glossa-gutter';
+const GUTTER_CLASS = 'aiditor-gutter';
 
 export interface GutterHost {
-  /** Active-annotation count for a given `^gl-id`, scoped to the note currently in this editor. */
+  /** Active-annotation count for a given `^ai-id`, scoped to the note currently in this editor. */
   countForBlockId: (blockId: string) => number;
   /** Called when a marker (existing annotations) is clicked. */
   onMarkerClick: (blockId: string, dom: HTMLElement) => void;
@@ -47,11 +47,11 @@ class AnnotationMarker extends GutterMarker {
   }
   toDOM(): HTMLElement {
     const el = document.createElement('div');
-    el.className = 'glossa-gutter-marker';
+    el.className = 'aiditor-gutter-marker';
     el.setAttribute('aria-label', this.count > 1 ? `${this.count} annotations` : 'Annotation');
     if (this.count > 1) {
       const badge = document.createElement('span');
-      badge.className = 'glossa-gutter-badge';
+      badge.className = 'aiditor-gutter-badge';
       badge.textContent = String(this.count);
       el.appendChild(badge);
     }
@@ -73,7 +73,7 @@ class PlusMarker extends GutterMarker {
   }
   toDOM(): HTMLElement {
     const el = document.createElement('div');
-    el.className = 'glossa-gutter-plus';
+    el.className = 'aiditor-gutter-plus';
     el.setAttribute('aria-label', 'Annotate this block');
     el.textContent = '+';
     el.addEventListener('click', (e) => {
@@ -144,7 +144,7 @@ function blockLineAtCoords(view: EditorView, x: number, y: number): number | nul
 }
 
 /** Dispatch this effect to force a gutter rebuild without a doc change (e.g. after a store mutation). */
-export const refreshGlossaGutterEffect = StateEffect.define<null>();
+export const refreshAIditorGutterEffect = StateEffect.define<null>();
 
 function buildRangeSet(specs: GutterMarkerSpec[], view: EditorView, host: GutterHost, hoverLine: number | null): RangeSet<GutterMarker> {
   const builder = new RangeSetBuilder<GutterMarker>();
@@ -162,7 +162,7 @@ function buildRangeSet(specs: GutterMarkerSpec[], view: EditorView, host: Gutter
   return builder.finish();
 }
 
-class GlossaGutterPlugin implements PluginValue {
+class AIditorGutterPlugin implements PluginValue {
   markers: RangeSet<GutterMarker> = RangeSet.empty;
   private hoverLine: number | null = null;
   private unsubscribe: () => void;
@@ -173,21 +173,21 @@ class GlossaGutterPlugin implements PluginValue {
     this.recompute();
     // Store change → refresh markers via an empty dispatch, which re-runs update().
     this.unsubscribe = host.onStoreChange(() => {
-      this.view.dispatch({ effects: refreshGlossaGutterEffect.of(null) });
+      this.view.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
     });
     this.onMove = (e: MouseEvent) => {
       const line = blockLineAtCoords(this.view, e.clientX, e.clientY);
       if (line !== this.hoverLine) {
         this.hoverLine = line;
         this.recompute();
-        this.view.dispatch({ effects: refreshGlossaGutterEffect.of(null) });
+        this.view.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
       }
     };
     this.onLeave = () => {
       if (this.hoverLine !== null) {
         this.hoverLine = null;
         this.recompute();
-        this.view.dispatch({ effects: refreshGlossaGutterEffect.of(null) });
+        this.view.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
       }
     };
     this.view.dom.addEventListener('mousemove', this.onMove);
@@ -201,7 +201,7 @@ class GlossaGutterPlugin implements PluginValue {
   }
 
   update(update: ViewUpdate): void {
-    const forced = update.transactions.some((tr) => tr.effects.some((e) => e.is(refreshGlossaGutterEffect)));
+    const forced = update.transactions.some((tr) => tr.effects.some((e) => e.is(refreshAIditorGutterEffect)));
     if (update.docChanged || update.viewportChanged || forced) {
       this.recompute();
     }
@@ -215,13 +215,13 @@ class GlossaGutterPlugin implements PluginValue {
 }
 
 /**
- * Builds the Glossa CM6 gutter extension: a ViewPlugin that maintains the
+ * Builds the AIditor CM6 gutter extension: a ViewPlugin that maintains the
  * marker RangeSet from a visible-range scan (rebuilt on docChanged /
  * viewportChanged / store change) plus the `gutter()` that renders it.
  * Register once via `registerEditorExtension` in main.ts.
  */
-export function glossaGutterExtension(host: GutterHost, side: 'left' | 'right' = 'left'): Extension {
-  const plugin = ViewPlugin.define((view) => new GlossaGutterPlugin(view, host));
+export function aiditorGutterExtension(host: GutterHost, side: 'left' | 'right' = 'left'): Extension {
+  const plugin = ViewPlugin.define((view) => new AIditorGutterPlugin(view, host));
   return [
     plugin,
     gutter({

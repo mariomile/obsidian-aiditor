@@ -1,5 +1,5 @@
 {
-  "name": "glossa",
+  "name": "aiditor",
   "version": "0.1.0",
   "description": "Durable, resolvable margin annotations anchored to blocks.",
   "main": "main.js",

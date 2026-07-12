@@ -6,7 +6,7 @@ import { type Annotation } from './model.ts';
 function ann(overrides: Partial<Annotation>): Annotation {
   return {
     id: 'a-1',
-    blockId: 'gl-abc123',
+    blockId: 'ai-abc123',
     notePath: 'Note.md',
     quote: 'q',
     prefix: '',
@@ -24,26 +24,26 @@ function ann(overrides: Partial<Annotation>): Annotation {
 describe('annotationsForBlock', () => {
   it('returns every annotation sharing the block in the note, ordered by creation', () => {
     const all = [
-      ann({ id: 'a-1', blockId: 'gl-x', created: 300 }),
-      ann({ id: 'a-2', blockId: 'gl-x', created: 100 }),
-      ann({ id: 'a-3', blockId: 'gl-y', created: 200 }),
-      ann({ id: 'a-4', blockId: 'gl-x', notePath: 'Other.md', created: 50 }),
+      ann({ id: 'a-1', blockId: 'ai-x', created: 300 }),
+      ann({ id: 'a-2', blockId: 'ai-x', created: 100 }),
+      ann({ id: 'a-3', blockId: 'ai-y', created: 200 }),
+      ann({ id: 'a-4', blockId: 'ai-x', notePath: 'Other.md', created: 50 }),
     ];
-    const result = annotationsForBlock(all, 'gl-x', 'Note.md');
+    const result = annotationsForBlock(all, 'ai-x', 'Note.md');
     assert.deepEqual(result.map((a) => a.id), ['a-2', 'a-1']);
   });
 
   it('ignores notePath scoping when notePath is undefined', () => {
     const all = [
-      ann({ id: 'a-1', blockId: 'gl-x', notePath: 'A.md' }),
-      ann({ id: 'a-2', blockId: 'gl-x', notePath: 'B.md' }),
+      ann({ id: 'a-1', blockId: 'ai-x', notePath: 'A.md' }),
+      ann({ id: 'a-2', blockId: 'ai-x', notePath: 'B.md' }),
     ];
-    const result = annotationsForBlock(all, 'gl-x', undefined);
+    const result = annotationsForBlock(all, 'ai-x', undefined);
     assert.equal(result.length, 2);
   });
 
   it('returns an empty list when nothing matches', () => {
-    assert.deepEqual(annotationsForBlock([ann({ blockId: 'gl-z' })], 'gl-x', 'Note.md'), []);
+    assert.deepEqual(annotationsForBlock([ann({ blockId: 'ai-z' })], 'ai-x', 'Note.md'), []);
   });
 });
 

@@ -1,9 +1,9 @@
 /**
  * Public API stub (design §7) — mirrors Exo's askExo cross-plugin pattern.
- * Consumers: app.plugins.plugins.glossa.addAnnotation({ notePath, quote, body }).
+ * Consumers: app.plugins.plugins.aiditor.addAnnotation({ notePath, quote, body }).
  *
  * STUB ONLY — no AI flow, no Exo coupling. Locates the quote in the note
- * text, stamps a ^gl-id after that block, creates an 'active' annotation,
+ * text, stamps a ^ai-id after that block, creates an 'active' annotation,
  * and returns the new annotation id.
  */
 
@@ -21,7 +21,7 @@ export interface AddAnnotationInput {
   color?: string;
 }
 
-export interface GlossaApiDeps {
+export interface AIditorApiDeps {
   app: App;
   store: AnnotationVaultStore;
 }
@@ -51,19 +51,19 @@ function blockSpanAtOffset(lines: string[], offset: number): { startLine: number
  * descriptive Error when the note path is unknown or the quote can't be
  * matched in the note text.
  */
-export function createGlossaApi({ app, store }: GlossaApiDeps) {
+export function createAIditorApi({ app, store }: AIditorApiDeps) {
   return {
     async addAnnotation(input: AddAnnotationInput): Promise<string> {
       const file = app.vault.getFileByPath(input.notePath);
       if (!file) {
-        throw new Error(`Glossa.addAnnotation: no note found at path "${input.notePath}".`);
+        throw new Error(`AIditor.addAnnotation: no note found at path "${input.notePath}".`);
       }
 
       const text = await app.vault.read(file);
       const match = matchQuote(text, { quote: input.quote, prefix: '', suffix: '' });
       if (!match) {
         throw new Error(
-          `Glossa.addAnnotation: quote not found in "${input.notePath}" — ` +
+          `AIditor.addAnnotation: quote not found in "${input.notePath}" — ` +
             `it may have been edited or the text does not match exactly.`,
         );
       }
@@ -96,4 +96,4 @@ export function createGlossaApi({ app, store }: GlossaApiDeps) {
   };
 }
 
-export type GlossaApi = ReturnType<typeof createGlossaApi>;
+export type AIditorApi = ReturnType<typeof createAIditorApi>;

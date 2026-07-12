@@ -42,7 +42,7 @@ export class AnnotationPopover extends Component {
 
   constructor(private deps: PopoverDeps) {
     super();
-    this.el = document.body.createDiv({ cls: 'glossa-popover' });
+    this.el = document.body.createDiv({ cls: 'aiditor-popover' });
     this.el.hide();
 
     this.registerDomEvent(document, 'mousedown', (e) => {
@@ -120,7 +120,7 @@ export class AnnotationPopover extends Component {
       return;
     }
     if (!this.annotationId) {
-      this.el.createDiv({ cls: 'glossa-popover-empty', text: 'No annotation.' });
+      this.el.createDiv({ cls: 'aiditor-popover-empty', text: 'No annotation.' });
       return;
     }
     this.renderAnnotation(this.annotationId);
@@ -131,15 +131,15 @@ export class AnnotationPopover extends Component {
     const scope = this.blockScope!;
     const list = annotationsForBlock(store.getAll(), scope.blockId, scope.notePath);
     if (list.length === 0) {
-      this.el.createDiv({ cls: 'glossa-popover-empty', text: 'No annotation.' });
+      this.el.createDiv({ cls: 'aiditor-popover-empty', text: 'No annotation.' });
       return;
     }
-    this.el.createDiv({ cls: 'glossa-popover-list-header', text: `${list.length} annotations` });
-    const listEl = this.el.createDiv({ cls: 'glossa-popover-list' });
+    this.el.createDiv({ cls: 'aiditor-popover-list-header', text: `${list.length} annotations` });
+    const listEl = this.el.createDiv({ cls: 'aiditor-popover-list' });
     for (const a of list) {
-      const item = listEl.createDiv({ cls: 'glossa-popover-list-item' });
-      item.createSpan({ cls: `glossa-status glossa-status--${a.status}`, text: a.status });
-      item.createSpan({ cls: 'glossa-popover-list-item-body', text: a.body || a.quote || '(empty)' });
+      const item = listEl.createDiv({ cls: 'aiditor-popover-list-item' });
+      item.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
+      item.createSpan({ cls: 'aiditor-popover-list-item-body', text: a.body || a.quote || '(empty)' });
       this.registerDomEvent(item, 'click', () => {
         this.annotationId = a.id;
         this.render();
@@ -151,7 +151,7 @@ export class AnnotationPopover extends Component {
     const { store } = this.deps;
     const a = store.getById(annotationId);
     if (!a) {
-      this.el.createDiv({ cls: 'glossa-popover-empty', text: 'Annotation not found.' });
+      this.el.createDiv({ cls: 'aiditor-popover-empty', text: 'Annotation not found.' });
       return;
     }
 
@@ -159,7 +159,7 @@ export class AnnotationPopover extends Component {
     if (this.blockScope) {
       const list = annotationsForBlock(store.getAll(), this.blockScope.blockId, this.blockScope.notePath);
       if (list.length > 1) {
-        const back = this.el.createDiv({ cls: 'glossa-popover-back', attr: { role: 'button' } });
+        const back = this.el.createDiv({ cls: 'aiditor-popover-back', attr: { role: 'button' } });
         setIcon(back, 'chevron-left');
         back.createSpan({ text: 'All annotations' });
         this.registerDomEvent(back, 'click', () => {
@@ -169,14 +169,14 @@ export class AnnotationPopover extends Component {
       }
     }
 
-    const header = this.el.createDiv({ cls: 'glossa-popover-header' });
-    header.createSpan({ cls: `glossa-status glossa-status--${a.status}`, text: a.status });
+    const header = this.el.createDiv({ cls: 'aiditor-popover-header' });
+    header.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
     if (a.quote) {
-      this.el.createDiv({ cls: 'glossa-popover-quote', text: a.quote });
+      this.el.createDiv({ cls: 'aiditor-popover-quote', text: a.quote });
     }
 
     const textarea = this.el.createEl('textarea', {
-      cls: 'glossa-popover-body',
+      cls: 'aiditor-popover-body',
       attr: { placeholder: 'Annotation…' },
     });
     textarea.value = a.body;
@@ -186,11 +186,11 @@ export class AnnotationPopover extends Component {
       if (isSaveShortcut(e)) {
         e.preventDefault();
         save();
-        new Notice('Glossa: annotation saved.');
+        new Notice('AIditor: annotation saved.');
       }
     });
 
-    const actions = this.el.createDiv({ cls: 'glossa-popover-actions' });
+    const actions = this.el.createDiv({ cls: 'aiditor-popover-actions' });
 
     if (a.status === 'active') {
       this.actionBtn(actions, 'check', 'Resolve', () => {
@@ -221,7 +221,7 @@ export class AnnotationPopover extends Component {
   /** Delete is explicit only: first click arms a confirm, second click deletes. */
   private renderDeleteControl(parent: HTMLElement, annotationId: string): void {
     const btn = parent.createEl('button', {
-      cls: 'glossa-popover-btn glossa-popover-btn--danger',
+      cls: 'aiditor-popover-btn aiditor-popover-btn--danger',
       attr: { 'aria-label': 'Delete' },
     });
     setIcon(btn, 'trash-2');
@@ -240,7 +240,7 @@ export class AnnotationPopover extends Component {
   }
 
   private actionBtn(parent: HTMLElement, icon: string, label: string, onClick: () => void): void {
-    const btn = parent.createEl('button', { cls: 'glossa-popover-btn', attr: { 'aria-label': label } });
+    const btn = parent.createEl('button', { cls: 'aiditor-popover-btn', attr: { 'aria-label': label } });
     setIcon(btn, icon);
     btn.createSpan({ text: label });
     this.registerDomEvent(btn, 'click', onClick);
@@ -251,7 +251,7 @@ export class AnnotationPopover extends Component {
     const { app, store } = this.deps;
     const view = app.workspace.getActiveViewOfType(MarkdownView);
     if (!view?.file || !view.editor.somethingSelected()) {
-      new Notice('Glossa: select text in the note to re-anchor to.');
+      new Notice('AIditor: select text in the note to re-anchor to.');
       return;
     }
     const { editor, file } = view;

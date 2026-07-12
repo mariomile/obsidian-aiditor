@@ -129,7 +129,7 @@ export function filterByStatus(
 /**
  * For every non-resolved annotation belonging to `notePath`, checks whether its
  * blockId is still present in `noteText` (scanned via anchor-core's standalone
- * ^gl-id scanner). Missing → marked `orphaned`. Present again → `active`.
+ * ^ai-id scanner). Missing → marked `orphaned`. Present again → `active`.
  * Resolved annotations are never touched (resolving is a separate, explicit
  * lifecycle transition — orphan recompute must not resurrect or re-orphan them).
  * Idempotent: no-op (no timestamp churn) when status would not change.

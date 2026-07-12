@@ -3,21 +3,21 @@ import type { VirtualElement } from '@floating-ui/dom';
 import { AnnotationVaultStore } from './store.ts';
 import { wireOrphanRecompute } from './anchor.ts';
 import { createAnnotation, type OpenAnnotationPopover } from './create.ts';
-import { createGlossaApi, type GlossaApi } from './api.ts';
+import { createAIditorApi, type AIditorApi } from './api.ts';
 import { AnnotationPopover } from './popover.ts';
-import { glossaGutterExtension, refreshGlossaGutterEffect, type GutterHost } from './gutter.ts';
-import { GlossaPanelView, VIEW_TYPE_GLOSSA_PANEL, type PanelHost } from './panel.ts';
-import { glossaReadingPostProcessor } from './reading.ts';
-import { DEFAULT_SETTINGS, GlossaSettingTab, type GlossaSettings } from './settings.ts';
+import { aiditorGutterExtension, refreshAIditorGutterEffect, type GutterHost } from './gutter.ts';
+import { AIditorPanelView, VIEW_TYPE_AIDITOR_PANEL, type PanelHost } from './panel.ts';
+import { aiditorReadingPostProcessor } from './reading.ts';
+import { DEFAULT_SETTINGS, AIditorSettingTab, type AIditorSettings } from './settings.ts';
 
-export default class GlossaPlugin extends Plugin {
-  settings!: GlossaSettings;
+export default class AIditorPlugin extends Plugin {
+  settings!: AIditorSettings;
   store!: AnnotationVaultStore;
 
   private popover!: AnnotationPopover;
   private unwireOrphanRecompute: (() => void) | null = null;
-  /** Public extension point (design §7): app.plugins.plugins.glossa.addAnnotation(...) */
-  addAnnotation!: GlossaApi['addAnnotation'];
+  /** Public extension point (design §7): app.plugins.plugins.aiditor.addAnnotation(...) */
+  addAnnotation!: AIditorApi['addAnnotation'];
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -27,8 +27,8 @@ export default class GlossaPlugin extends Plugin {
 
     // Expose the public API directly on the plugin instance (design §7),
     // mirroring Exo's askExo cross-plugin pattern:
-    //   app.plugins.plugins.glossa.addAnnotation({ notePath, quote, body })
-    const api = createGlossaApi({ app: this.app, store: this.store });
+    //   app.plugins.plugins.aiditor.addAnnotation({ notePath, quote, body })
+    const api = createAIditorApi({ app: this.app, store: this.store });
     this.addAnnotation = api.addAnnotation;
 
     this.popover = new AnnotationPopover({ app: this.app, store: this.store });
@@ -41,7 +41,7 @@ export default class GlossaPlugin extends Plugin {
     // Gutter markers stay in sync with store mutations that don't touch the
     // note text (resolve/reopen/delete) via each editor's own ViewPlugin
     // subscription (GutterHost.onStoreChange), so no global refresh is wired
-    // here — see glossaGutterExtension.
+    // here — see aiditorGutterExtension.
 
     const gutterHost: GutterHost = {
       countForBlockId: (blockId) => {
@@ -62,21 +62,21 @@ export default class GlossaPlugin extends Plugin {
       },
       onStoreChange: (listener) => this.store.onChange(() => listener()),
     };
-    this.registerEditorExtension(glossaGutterExtension(gutterHost, this.settings.gutterSide));
+    this.registerEditorExtension(aiditorGutterExtension(gutterHost, this.settings.gutterSide));
 
     // Reading-view marker seam — intentionally stubbed for MVP (design §11.1,
     // src/reading.ts). Registering it now means picking the real
     // implementation up later needs no main.ts changes.
-    this.registerMarkdownPostProcessor(glossaReadingPostProcessor());
+    this.registerMarkdownPostProcessor(aiditorReadingPostProcessor());
 
     const panelHost: PanelHost = {
       app: this.app,
       store: this.store,
       openPopover: (annotationId, anchor) => this.popover.open(annotationId, anchor),
     };
-    this.registerView(VIEW_TYPE_GLOSSA_PANEL, (leaf: WorkspaceLeaf) => new GlossaPanelView(leaf, panelHost));
+    this.registerView(VIEW_TYPE_AIDITOR_PANEL, (leaf: WorkspaceLeaf) => new AIditorPanelView(leaf, panelHost));
 
-    this.addSettingTab(new GlossaSettingTab(this.app, this));
+    this.addSettingTab(new AIditorSettingTab(this.app, this));
 
     // No default hotkey by design — README points users to Settings → Hotkeys
     // so "Annotate selection" never silently steals a binding.
@@ -130,7 +130,7 @@ export default class GlossaPlugin extends Plugin {
       await createAnnotation({ app: this.app, store: this.store, openPopover: this.openPopoverSeam });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      new Notice(`Glossa: ${message}`);
+      new Notice(`AIditor: ${message}`);
     }
   }
 
@@ -147,7 +147,7 @@ export default class GlossaPlugin extends Plugin {
       await createAnnotation({ app: this.app, store: this.store, openPopover: openAt });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      new Notice(`Glossa: ${message}`);
+      new Notice(`AIditor: ${message}`);
     }
   }
 
@@ -156,16 +156,16 @@ export default class GlossaPlugin extends Plugin {
       const view = leaf.view;
       if (!(view instanceof MarkdownView)) return;
       const cm = (view.editor as unknown as { cm?: { dispatch: (spec: unknown) => void } }).cm;
-      cm?.dispatch({ effects: refreshGlossaGutterEffect.of(null) });
+      cm?.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
     });
   }
 
   async activatePanel(): Promise<void> {
     const { workspace } = this.app;
-    let leaf: WorkspaceLeaf | null = workspace.getLeavesOfType(VIEW_TYPE_GLOSSA_PANEL)[0] ?? null;
+    let leaf: WorkspaceLeaf | null = workspace.getLeavesOfType(VIEW_TYPE_AIDITOR_PANEL)[0] ?? null;
     if (!leaf) {
       leaf = workspace.getRightLeaf(false);
-      await leaf?.setViewState({ type: VIEW_TYPE_GLOSSA_PANEL, active: true });
+      await leaf?.setViewState({ type: VIEW_TYPE_AIDITOR_PANEL, active: true });
     }
     if (leaf) workspace.revealLeaf(leaf);
   }

@@ -1,5 +1,5 @@
 /**
- * Shared types for Glossa annotations and the sidecar store.
+ * Shared types for AIditor annotations and the sidecar store.
  * Pure types only — no Obsidian imports, no runtime logic.
  */
 
@@ -8,7 +8,7 @@ export type AnnotationStatus = 'active' | 'resolved' | 'orphaned';
 export interface Annotation {
   /** annotation id (stable, primary key), e.g. "a-<uuid>" */
   id: string;
-  /** the ^gl-id it anchors to, WITHOUT the caret, e.g. "gl-x8k2p1" */
+  /** the ^ai-id it anchors to, WITHOUT the caret, e.g. "ai-x8k2p1" */
   blockId: string;
   /** display + fast lookup; re-derivable via blockId search if stale */
   notePath: string;

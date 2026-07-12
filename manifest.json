@@ -1,6 +1,6 @@
 {
-  "id": "glossa",
-  "name": "Glossa",
+  "id": "aiditor",
+  "name": "AIditor",
   "version": "0.1.0",
   "minAppVersion": "1.10.0",
   "description": "Durable, resolvable margin annotations anchored to blocks.",

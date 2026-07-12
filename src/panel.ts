@@ -22,7 +22,7 @@ import {
   relativeTime,
 } from './panel-core.ts';
 
-export const VIEW_TYPE_GLOSSA_PANEL = 'glossa-panel';
+export const VIEW_TYPE_AIDITOR_PANEL = 'aiditor-panel';
 
 const QUOTE_TRUNCATE_LEN = 80;
 const BODY_TRUNCATE_LEN = 140;
@@ -33,7 +33,7 @@ export interface PanelHost {
   openPopover: (annotationId: string, anchor: VirtualElement) => void;
 }
 
-export class GlossaPanelView extends ItemView {
+export class AIditorPanelView extends ItemView {
   private tab: AnnotationStatus = 'active';
   private unsubStore: (() => void) | null = null;
 
@@ -42,10 +42,10 @@ export class GlossaPanelView extends ItemView {
   }
 
   getViewType(): string {
-    return VIEW_TYPE_GLOSSA_PANEL;
+    return VIEW_TYPE_AIDITOR_PANEL;
   }
   getDisplayText(): string {
-    return 'Glossa annotations';
+    return 'AIditor annotations';
   }
   getIcon(): string {
     return 'message-square-text';
@@ -70,33 +70,33 @@ export class GlossaPanelView extends ItemView {
   render(): void {
     const root = this.contentEl;
     root.empty();
-    root.addClass('glossa-panel');
+    root.addClass('aiditor-panel');
 
     const notePath = this.activeNotePath();
     const counts = countsForNote(this.host.store.getStore(), notePath);
 
-    const tabsEl = root.createDiv({ cls: 'glossa-panel-tabs' });
+    const tabsEl = root.createDiv({ cls: 'aiditor-panel-tabs' });
     for (const status of PANEL_TABS) {
       const tabBtn = tabsEl.createDiv({
-        cls: `glossa-panel-tab${status === this.tab ? ' is-active' : ''}`,
+        cls: `aiditor-panel-tab${status === this.tab ? ' is-active' : ''}`,
       });
-      tabBtn.createSpan({ cls: 'glossa-panel-tab-label', text: tabLabelWithCount(status, counts[status]) });
+      tabBtn.createSpan({ cls: 'aiditor-panel-tab-label', text: tabLabelWithCount(status, counts[status]) });
       tabBtn.addEventListener('click', () => {
         this.tab = status;
         this.render();
       });
     }
 
-    const listEl = root.createDiv({ cls: 'glossa-panel-list' });
+    const listEl = root.createDiv({ cls: 'aiditor-panel-list' });
 
     if (!notePath) {
-      listEl.createDiv({ cls: 'glossa-panel-empty', text: 'Open a note to see its annotations.' });
+      listEl.createDiv({ cls: 'aiditor-panel-empty', text: 'Open a note to see its annotations.' });
       return;
     }
 
     const items = itemsForTab(this.host.store.getStore(), this.tab, notePath);
     if (items.length === 0) {
-      listEl.createDiv({ cls: 'glossa-panel-empty', text: emptyStateMessage(this.tab) });
+      listEl.createDiv({ cls: 'aiditor-panel-empty', text: emptyStateMessage(this.tab) });
       return;
     }
 
@@ -106,15 +106,15 @@ export class GlossaPanelView extends ItemView {
   }
 
   private renderItem(parent: HTMLElement, a: Annotation): void {
-    const item = parent.createDiv({ cls: 'glossa-panel-item' });
+    const item = parent.createDiv({ cls: 'aiditor-panel-item' });
     if (a.quote) {
-      item.createDiv({ cls: 'glossa-panel-item-quote', text: truncate(a.quote, QUOTE_TRUNCATE_LEN) });
+      item.createDiv({ cls: 'aiditor-panel-item-quote', text: truncate(a.quote, QUOTE_TRUNCATE_LEN) });
     }
     item.createDiv({
-      cls: 'glossa-panel-item-body',
+      cls: 'aiditor-panel-item-body',
       text: a.body ? truncate(a.body, BODY_TRUNCATE_LEN) : '(empty annotation)',
     });
-    item.createDiv({ cls: 'glossa-panel-item-time', text: relativeTime(a.updated, Date.now()) });
+    item.createDiv({ cls: 'aiditor-panel-item-time', text: relativeTime(a.updated, Date.now()) });
 
     if (a.status === 'orphaned') {
       this.renderOrphanActions(item, a);
@@ -124,16 +124,16 @@ export class GlossaPanelView extends ItemView {
     }
 
     item.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.glossa-panel-item-actions')) return;
+      if ((e.target as HTMLElement).closest('.aiditor-panel-item-actions')) return;
       void this.openAndFocus(a, item);
     });
   }
 
   private renderOrphanActions(item: HTMLElement, a: Annotation): void {
-    const actions = item.createDiv({ cls: 'glossa-panel-item-actions' });
+    const actions = item.createDiv({ cls: 'aiditor-panel-item-actions' });
 
     const reanchorBtn = actions.createEl('button', {
-      cls: 'glossa-panel-item-action',
+      cls: 'aiditor-panel-item-action',
       attr: { 'aria-label': 'Re-anchor' },
     });
     setIcon(reanchorBtn, 'link');
@@ -145,11 +145,11 @@ export class GlossaPanelView extends ItemView {
       // duplicating selection-capture logic here.
       const rect = reanchorBtn.getBoundingClientRect();
       this.host.openPopover(a.id, { getBoundingClientRect: () => rect });
-      new Notice('Glossa: select the new text in the note, then click "Re-anchor to selection".');
+      new Notice('AIditor: select the new text in the note, then click "Re-anchor to selection".');
     });
 
     const deleteBtn = actions.createEl('button', {
-      cls: 'glossa-panel-item-action glossa-panel-item-action--danger',
+      cls: 'aiditor-panel-item-action aiditor-panel-item-action--danger',
       attr: { 'aria-label': 'Delete' },
     });
     setIcon(deleteBtn, 'trash-2');
@@ -184,7 +184,7 @@ export class GlossaPanelView extends ItemView {
   }
 }
 
-/** Finds the 0-based line index of the block a `^gl-<id>` anchors (the line above the marker). */
+/** Finds the 0-based line index of the block a `^ai-<id>` anchors (the line above the marker). */
 function findLineForBlockId(noteText: string, blockId: string): number | null {
   const lines = noteText.split('\n');
   const marker = `^${blockId}`;

@@ -1,6 +1,6 @@
 /**
  * Applies anchor-core edits to real notes: reuses an existing standalone
- * ^gl-<id> for a block (never double-stamps), or computes + writes the
+ * ^ai-<id> for a block (never double-stamps), or computes + writes the
  * insertion. Writes go through the active editor (preserves cursor) when the
  * note is open in it, otherwise through `vault.modify`.
  *
@@ -20,7 +20,7 @@ import {
 } from './anchor-core.ts';
 import type { AnnotationVaultStore } from './store.ts';
 
-/** Result of ensuring a block has a ^gl-id: the id, plus whether it was newly stamped. */
+/** Result of ensuring a block has a ^ai-id: the id, plus whether it was newly stamped. */
 export interface EnsuredBlockId {
   id: string;
   created: boolean;
@@ -76,10 +76,10 @@ export interface EnsureBlockIdDeps {
 }
 
 /**
- * Ensures `block` in `file` has a standalone ^gl-id, reusing an existing one
+ * Ensures `block` in `file` has a standalone ^ai-id, reusing an existing one
  * if present (never double-stamps). Writes via the open editor when the note
  * is active (preserving cursor), otherwise via vault.modify. Collision-checks
- * new ids against every ^gl-id already present in the note text.
+ * new ids against every ^ai-id already present in the note text.
  */
 export async function ensureBlockId(
   { app, file }: EnsureBlockIdDeps,

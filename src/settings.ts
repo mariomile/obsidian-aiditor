@@ -1,6 +1,6 @@
 /**
  * Settings tab (design §8/§9): store path override, gutter side, hotkey hint.
- * `GlossaSettings`/`DEFAULT_SETTINGS` live in the pure `settings-core.ts` (no
+ * `AIditorSettings`/`DEFAULT_SETTINGS` live in the pure `settings-core.ts` (no
  * Obsidian imports, unit-testable) and are re-exported here; this module adds
  * only the Obsidian-coupled `PluginSettingTab` UI.
  *
@@ -12,15 +12,15 @@
  */
 
 import { PluginSettingTab, Setting, type App } from 'obsidian';
-import type GlossaPlugin from './main.ts';
+import type AIditorPlugin from './main.ts';
 import { STORE_PATH } from './store.ts';
 import { DEFAULT_SETTINGS, type GutterSide } from './settings-core.ts';
 
-export type { GlossaSettings, GutterSide } from './settings-core.ts';
+export type { AIditorSettings, GutterSide } from './settings-core.ts';
 export { DEFAULT_SETTINGS } from './settings-core.ts';
 
-export class GlossaSettingTab extends PluginSettingTab {
-  constructor(app: App, private plugin: GlossaPlugin) {
+export class AIditorSettingTab extends PluginSettingTab {
+  constructor(app: App, private plugin: AIditorPlugin) {
     super(app, plugin);
   }
 
@@ -28,7 +28,7 @@ export class GlossaSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName('Glossa').setHeading();
+    new Setting(containerEl).setName('AIditor').setHeading();
 
     new Setting(containerEl)
       .setName('Annotation store path')
@@ -62,7 +62,7 @@ export class GlossaSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Annotate selection hotkey')
       .setDesc(
-        'Glossa ships with no default hotkey for "Annotate selection" so it never collides with your existing bindings. Bind one yourself in Settings → Hotkeys → search "Glossa".',
+        'AIditor ships with no default hotkey for "Annotate selection" so it never collides with your existing bindings. Bind one yourself in Settings → Hotkeys → search "AIditor".',
       );
   }
 }

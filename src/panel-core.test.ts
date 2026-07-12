@@ -14,7 +14,7 @@ import { emptyStore, type Annotation, type AnnotationStore } from './model.ts';
 function makeAnnotation(overrides: Partial<Annotation> = {}): Annotation {
   return {
     id: 'a-1',
-    blockId: 'gl-abc123',
+    blockId: 'ai-abc123',
     notePath: 'Note.md',
     quote: 'hello world',
     prefix: 'before ',

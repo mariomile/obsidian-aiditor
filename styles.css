@@ -1,22 +1,22 @@
-/* ===== Glossa ===== */
-/* All selectors in this file use the `.glossa-` prefix. */
+/* ===== AIditor ===== */
+/* All selectors in this file use the `.aiditor-` prefix. */
 
-.glossa-container {
+.aiditor-container {
   background: var(--background-secondary);
 }
 
-.glossa-hint {
+.aiditor-hint {
   color: var(--text-muted);
 }
 
 /* ---------- Gutter (Live Preview) ---------- */
 
-.glossa-gutter {
+.aiditor-gutter {
   width: 1.4em;
 }
 
-.glossa-gutter-marker,
-.glossa-gutter-plus {
+.aiditor-gutter-marker,
+.aiditor-gutter-plus {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,39 +29,39 @@
   line-height: 1;
 }
 
-.glossa-gutter-marker {
+.aiditor-gutter-marker {
   background: var(--interactive-accent);
   opacity: 0.75;
 }
 
-.glossa-gutter-marker:hover {
+.aiditor-gutter-marker:hover {
   opacity: 1;
 }
 
-.glossa-gutter-badge {
+.aiditor-gutter-badge {
   color: var(--text-on-accent);
   font-size: 0.7em;
   font-weight: 600;
 }
 
-.glossa-gutter-plus {
+.aiditor-gutter-plus {
   color: var(--text-faint);
   opacity: 0;
   transition: opacity 0.1s ease;
 }
 
-.glossa-gutter:hover .glossa-gutter-plus {
+.aiditor-gutter:hover .aiditor-gutter-plus {
   opacity: 0.6;
 }
 
-.glossa-gutter-plus:hover {
+.aiditor-gutter-plus:hover {
   opacity: 1 !important;
   color: var(--text-accent);
 }
 
 /* ---------- Popover ---------- */
 
-.glossa-popover {
+.aiditor-popover {
   position: absolute;
   z-index: var(--layer-popover, 70);
   width: 280px;
@@ -72,13 +72,13 @@
   box-shadow: var(--shadow-l);
 }
 
-.glossa-popover-header {
+.aiditor-popover-header {
   display: flex;
   align-items: center;
   margin-bottom: 0.4em;
 }
 
-.glossa-status {
+.aiditor-status {
   font-size: 0.7em;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -88,17 +88,17 @@
   color: var(--text-muted);
 }
 
-.glossa-status--active {
+.aiditor-status--active {
   background: var(--color-green, var(--interactive-accent));
   color: var(--text-on-accent);
 }
 
-.glossa-status--orphaned {
+.aiditor-status--orphaned {
   background: var(--color-orange, var(--text-error));
   color: var(--text-on-accent);
 }
 
-.glossa-popover-quote {
+.aiditor-popover-quote {
   font-size: 0.85em;
   font-style: italic;
   color: var(--text-muted);
@@ -109,7 +109,7 @@
   overflow-y: auto;
 }
 
-.glossa-popover-body {
+.aiditor-popover-body {
   width: 100%;
   min-height: 4em;
   resize: vertical;
@@ -122,13 +122,13 @@
   font-size: 0.9em;
 }
 
-.glossa-popover-actions {
+.aiditor-popover-actions {
   display: flex;
   gap: 0.4em;
   margin-top: 0.5em;
 }
 
-.glossa-popover-btn {
+.aiditor-popover-btn {
   display: flex;
   align-items: center;
   gap: 0.3em;
@@ -141,27 +141,27 @@
   cursor: pointer;
 }
 
-.glossa-popover-btn:hover {
+.aiditor-popover-btn:hover {
   background: var(--background-modifier-hover);
 }
 
-.glossa-popover-empty {
+.aiditor-popover-empty {
   color: var(--text-muted);
   font-size: 0.85em;
 }
 
-.glossa-popover-btn--danger.is-armed {
+.aiditor-popover-btn--danger.is-armed {
   border-color: var(--text-error);
   color: var(--text-error);
 }
 
-.glossa-popover-btn--danger.is-armed:hover {
+.aiditor-popover-btn--danger.is-armed:hover {
   background: var(--background-modifier-error-hover);
 }
 
 /* Multi-annotation list (a block with >1 annotation) */
 
-.glossa-popover-list-header {
+.aiditor-popover-list-header {
   font-size: 0.75em;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -169,13 +169,13 @@
   margin-bottom: 0.4em;
 }
 
-.glossa-popover-list {
+.aiditor-popover-list {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
 }
 
-.glossa-popover-list-item {
+.aiditor-popover-list-item {
   display: flex;
   align-items: center;
   gap: 0.4em;
@@ -184,11 +184,11 @@
   cursor: pointer;
 }
 
-.glossa-popover-list-item:hover {
+.aiditor-popover-list-item:hover {
   background: var(--background-modifier-hover);
 }
 
-.glossa-popover-list-item-body {
+.aiditor-popover-list-item-body {
   font-size: 0.85em;
   color: var(--text-normal);
   overflow: hidden;
@@ -196,7 +196,7 @@
   white-space: nowrap;
 }
 
-.glossa-popover-back {
+.aiditor-popover-back {
   display: flex;
   align-items: center;
   gap: 0.2em;
@@ -206,19 +206,19 @@
   margin-bottom: 0.4em;
 }
 
-.glossa-popover-back:hover {
+.aiditor-popover-back:hover {
   color: var(--text-normal);
 }
 
 /* ---------- Panel ---------- */
 
-.glossa-panel-tabs {
+.aiditor-panel-tabs {
   display: flex;
   border-bottom: 1px solid var(--background-modifier-border);
   margin-bottom: 0.5em;
 }
 
-.glossa-panel-tab {
+.aiditor-panel-tab {
   flex: 1;
   display: flex;
   align-items: center;
@@ -231,16 +231,16 @@
   border-bottom: 2px solid transparent;
 }
 
-.glossa-panel-tab.is-active {
+.aiditor-panel-tab.is-active {
   color: var(--text-normal);
   border-bottom-color: var(--interactive-accent);
 }
 
-.glossa-panel-tab-label {
+.aiditor-panel-tab-label {
   font-size: 0.85em;
 }
 
-.glossa-panel-item {
+.aiditor-panel-item {
   padding: 0.5em;
   margin-bottom: 0.4em;
   border-radius: var(--radius-s);
@@ -248,11 +248,11 @@
   cursor: pointer;
 }
 
-.glossa-panel-item:hover {
+.aiditor-panel-item:hover {
   background: var(--background-modifier-hover);
 }
 
-.glossa-panel-item-quote {
+.aiditor-panel-item-quote {
   font-size: 0.8em;
   font-style: italic;
   color: var(--text-muted);
@@ -262,26 +262,26 @@
   white-space: nowrap;
 }
 
-.glossa-panel-item-body {
+.aiditor-panel-item-body {
   font-size: 0.85em;
   color: var(--text-normal);
   white-space: pre-wrap;
 }
 
-.glossa-panel-item-time {
+.aiditor-panel-item-time {
   font-size: 0.75em;
   color: var(--text-faint);
   margin-top: 0.3em;
 }
 
-.glossa-panel-item-actions {
+.aiditor-panel-item-actions {
   display: flex;
   gap: 0.4em;
   margin-top: 0.5em;
   cursor: default;
 }
 
-.glossa-panel-item-action {
+.aiditor-panel-item-action {
   display: flex;
   align-items: center;
   gap: 0.3em;
@@ -294,20 +294,20 @@
   cursor: pointer;
 }
 
-.glossa-panel-item-action:hover {
+.aiditor-panel-item-action:hover {
   background: var(--background-modifier-hover);
 }
 
-.glossa-panel-item-action--danger.is-armed {
+.aiditor-panel-item-action--danger.is-armed {
   border-color: var(--text-error);
   color: var(--text-error);
 }
 
-.glossa-panel-item-action--danger.is-armed:hover {
+.aiditor-panel-item-action--danger.is-armed:hover {
   background: var(--background-modifier-error-hover);
 }
 
-.glossa-panel-empty {
+.aiditor-panel-empty {
   color: var(--text-muted);
   font-size: 0.85em;
   padding: 1em 0.5em;

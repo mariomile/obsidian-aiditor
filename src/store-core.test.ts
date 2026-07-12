@@ -15,7 +15,7 @@ import { emptyStore, type Annotation, type AnnotationStore } from './model.ts';
 function makeAnnotation(overrides: Partial<Annotation> = {}): Annotation {
   return {
     id: 'a-1',
-    blockId: 'gl-abc123',
+    blockId: 'ai-abc123',
     notePath: 'Note.md',
     quote: 'hello world',
     prefix: 'before ',
@@ -34,7 +34,7 @@ describe('addAnnotation', () => {
   it('is deterministic — same store + input + now yields the same id (no Math.random / no module state)', () => {
     const store = emptyStore();
     const input = {
-      blockId: 'gl-abc123',
+      blockId: 'ai-abc123',
       notePath: 'Note.md',
       quote: 'hi',
       prefix: '',
@@ -52,7 +52,7 @@ describe('addAnnotation', () => {
   it('appends a new active annotation with created/updated timestamps', () => {
     const store = emptyStore();
     const result = addAnnotation(store, {
-      blockId: 'gl-abc123',
+      blockId: 'ai-abc123',
       notePath: 'Note.md',
       quote: 'hi',
       prefix: '',
@@ -138,17 +138,17 @@ describe('reanchorAnnotation', () => {
   it('rebinds an orphaned annotation to a fresh blockId/quote and reactivates it', () => {
     const store: AnnotationStore = {
       version: 1,
-      annotations: [makeAnnotation({ status: 'orphaned', blockId: 'gl-old000' })],
+      annotations: [makeAnnotation({ status: 'orphaned', blockId: 'ai-old000' })],
     };
     const next = reanchorAnnotation(store, 'a-1', {
-      blockId: 'gl-new111',
+      blockId: 'ai-new111',
       quote: 'new quote',
       prefix: 'p',
       suffix: 's',
     }, 4000);
     const a = next.annotations[0]!;
     assert.equal(a.status, 'active');
-    assert.equal(a.blockId, 'gl-new111');
+    assert.equal(a.blockId, 'ai-new111');
     assert.equal(a.quote, 'new quote');
     assert.equal(a.prefix, 'p');
     assert.equal(a.suffix, 's');
@@ -188,11 +188,11 @@ describe('recomputeOrphans', () => {
     const store: AnnotationStore = {
       version: 1,
       annotations: [
-        makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'gl-present' }),
-        makeAnnotation({ id: 'a-2', notePath: 'Note.md', blockId: 'gl-missing' }),
+        makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'ai-present' }),
+        makeAnnotation({ id: 'a-2', notePath: 'Note.md', blockId: 'ai-missing' }),
       ],
     };
-    const noteText = 'Some text.\n^gl-present\n';
+    const noteText = 'Some text.\n^ai-present\n';
     const next = recomputeOrphans(store, 'Note.md', noteText, 6000);
     assert.equal(next.annotations.find((a) => a.id === 'a-1')!.status, 'active');
     assert.equal(next.annotations.find((a) => a.id === 'a-2')!.status, 'orphaned');
@@ -201,7 +201,7 @@ describe('recomputeOrphans', () => {
   it('does not touch annotations for other notes', () => {
     const store: AnnotationStore = {
       version: 1,
-      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Other.md', blockId: 'gl-missing' })],
+      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Other.md', blockId: 'ai-missing' })],
     };
     const next = recomputeOrphans(store, 'Note.md', 'no ids here', 6000);
     assert.equal(next.annotations[0]!.status, 'active');
@@ -210,18 +210,18 @@ describe('recomputeOrphans', () => {
   it('does not resurrect a resolved annotation just because its blockId is present', () => {
     const store: AnnotationStore = {
       version: 1,
-      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'gl-present', status: 'resolved', resolvedAt: 10 })],
+      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'ai-present', status: 'resolved', resolvedAt: 10 })],
     };
-    const next = recomputeOrphans(store, 'Note.md', '^gl-present', 6000);
+    const next = recomputeOrphans(store, 'Note.md', '^ai-present', 6000);
     assert.equal(next.annotations[0]!.status, 'resolved');
   });
 
   it('re-activates an orphaned annotation when its blockId reappears in the note (re-anchoring detection)', () => {
     const store: AnnotationStore = {
       version: 1,
-      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'gl-present', status: 'orphaned' })],
+      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'ai-present', status: 'orphaned' })],
     };
-    const next = recomputeOrphans(store, 'Note.md', 'Some text.\n\n^gl-present\n', 7000);
+    const next = recomputeOrphans(store, 'Note.md', 'Some text.\n\n^ai-present\n', 7000);
     assert.equal(next.annotations[0]!.status, 'active');
     assert.equal(next.annotations[0]!.updated, 7000);
   });
@@ -229,7 +229,7 @@ describe('recomputeOrphans', () => {
   it('re-orphaning is idempotent — no timestamp churn when status does not change', () => {
     const store: AnnotationStore = {
       version: 1,
-      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'gl-missing', status: 'orphaned', updated: 42 })],
+      annotations: [makeAnnotation({ id: 'a-1', notePath: 'Note.md', blockId: 'ai-missing', status: 'orphaned', updated: 42 })],
     };
     const next = recomputeOrphans(store, 'Note.md', 'no ids here', 6000);
     assert.equal(next.annotations[0]!.updated, 42);

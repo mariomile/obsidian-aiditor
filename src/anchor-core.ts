@@ -1,6 +1,6 @@
 /**
  * Pure, Obsidian-free anchoring logic: block-id generation/collision-check,
- * standalone-line ^gl-id detection & insertion, and text-quote (prefix/quote/suffix)
+ * standalone-line ^ai-id detection & insertion, and text-quote (prefix/quote/suffix)
  * matching/relocation. No Obsidian imports, no clock — timestamps are the caller's job.
  */
 
@@ -40,7 +40,7 @@ function randomBase36Chunk(rand: () => number): string {
 }
 
 /**
- * Generate a `gl-<6-char-base36>` block id, collision-checked against `existing`
+ * Generate a `ai-<6-char-base36>` block id, collision-checked against `existing`
  * (the set of blockIds already present in the store / note). `rand` defaults to
  * Math.random but is injectable for deterministic tests.
  */
@@ -48,19 +48,19 @@ export function generateBlockId(
   rand: () => number = Math.random,
   existing: ReadonlySet<string> = new Set(),
 ): string {
-  let id = `gl-${randomBase36Chunk(rand)}`;
+  let id = `ai-${randomBase36Chunk(rand)}`;
   let guard = 0;
   while (existing.has(id) && guard < 1000) {
-    id = `gl-${randomBase36Chunk(rand)}`;
+    id = `ai-${randomBase36Chunk(rand)}`;
     guard++;
   }
   return id;
 }
 
-const STANDALONE_BLOCK_ID_RE = /^\^(gl-[a-z0-9]+)\s*$/;
+const STANDALONE_BLOCK_ID_RE = /^\^(ai-[a-z0-9]+)\s*$/;
 
 /**
- * Look for a standalone `^gl-<id>` line immediately following the block
+ * Look for a standalone `^ai-<id>` line immediately following the block
  * (skipping at most one blank separator line). Inline ids (appended to a
  * content line) are never matched — standalone only, per design §3.
  */
@@ -82,7 +82,7 @@ export function findBlockIdForBlock(lines: string[], block: BlockSpan): string |
   return null;
 }
 
-/** Scan the whole doc for every standalone `^gl-<id>` line. */
+/** Scan the whole doc for every standalone `^ai-<id>` line. */
 export function findAllBlockIds(lines: string[]): Set<string> {
   const ids = new Set<string>();
   for (const line of lines) {
@@ -93,7 +93,7 @@ export function findAllBlockIds(lines: string[]): Set<string> {
 }
 
 /**
- * Compute the LineEdit that inserts a standalone `^gl-<id>` line after the
+ * Compute the LineEdit that inserts a standalone `^ai-<id>` line after the
  * given block. Always a blank separator + the id on its own line — never
  * inline (inline breaks hr/table rendering, per design §3).
  */
