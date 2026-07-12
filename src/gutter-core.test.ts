@@ -49,34 +49,4 @@ describe('deriveGutterMarkers', () => {
     const markerIds = result.filter((m) => m.kind === 'marker').map((m) => m.blockId);
     assert.deepEqual(markerIds, ['ai-visible']);
   });
-
-  it('offers a ＋ affordance on a block-start line that has no ^ai-id yet', () => {
-    const doc = ['First block.', '', 'Second block.'].join('\n');
-    const result = deriveGutterMarkers(visibleLines(doc, [0, 1, 2]), () => 0);
-    const plusLines = result.filter((m) => m.kind === 'plus').map((m) => m.line).sort((a, b) => a - b);
-    assert.deepEqual(plusLines, [0, 2]);
-  });
-
-  it('does not offer ＋ on a block that already carries an annotated marker', () => {
-    const doc = ['Annotated block.', '^ai-abc123'].join('\n');
-    const counts = new Map([['ai-abc123', 1]]);
-    const result = deriveGutterMarkers(visibleLines(doc, [0, 1]), (id) => counts.get(id) ?? 0);
-    assert.equal(result.filter((m) => m.kind === 'plus' && m.line === 0).length, 0);
-  });
-
-  it('does not offer ＋ on the ^ai-id line itself or on blank lines', () => {
-    const doc = ['Text.', '', '^ai-abc123'].join('\n');
-    const result = deriveGutterMarkers(visibleLines(doc, [0, 1, 2]), () => 0);
-    const plusLines = result.filter((m) => m.kind === 'plus').map((m) => m.line);
-    assert.ok(!plusLines.includes(1)); // blank
-    assert.ok(!plusLines.includes(2)); // ^ai-id line
-  });
-
-  it('treats a block-start as the first non-blank line after a blank line or doc start', () => {
-    // line 1 is a continuation of the block starting at line 0 → no ＋ on line 1
-    const doc = ['Line one of block', 'line two of block', '', 'New block'].join('\n');
-    const result = deriveGutterMarkers(visibleLines(doc, [0, 1, 2, 3]), () => 0);
-    const plusLines = result.filter((m) => m.kind === 'plus').map((m) => m.line).sort((a, b) => a - b);
-    assert.deepEqual(plusLines, [0, 3]);
-  });
 });

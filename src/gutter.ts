@@ -10,15 +10,8 @@
  * input, so a marker can never desync from its `^ai-id`.
  *
  * Markers: a subtle dot on the content line of any block whose `^ai-id` has
- * ≥1 active annotation (count badge when >1); click → popover. A "＋"
- * affordance appears on the gutter of the hovered block and funnels into the
- * shared createAnnotation flow.
- *
- * CM6 gotcha (prior vault experience): `posAtCoords` never resolves inside
- * `.cm-embed-block` (tables/callouts/embeds in Live Preview). The hover
- * hit-test therefore falls back through `closest('.cm-embed-block')` +
- * `posAtDOM` + an element-rect scan. The `^ai-id` line itself is always a
- * plain line, which is why markers key off it.
+ * ≥1 active annotation (count badge when >1); click → popover. The `^ai-id`
+ * line itself is always a plain line, which is why markers key off it.
  */
 
 import { gutter, GutterMarker, ViewPlugin, EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
@@ -32,8 +25,6 @@ export interface GutterHost {
   countForBlockId: (blockId: string) => number;
   /** Called when a marker (existing annotations) is clicked. */
   onMarkerClick: (blockId: string, dom: HTMLElement) => void;
-  /** Called when the "＋" affordance is clicked for the block starting at `line` (0-based). */
-  onPlusClick: (line: number, dom: HTMLElement) => void;
   /** Subscribe to store changes; returns an unsubscribe. Triggers a marker refresh. */
   onStoreChange: (listener: () => void) => () => void;
 }
@@ -64,27 +55,6 @@ class AnnotationMarker extends GutterMarker {
   }
 }
 
-class PlusMarker extends GutterMarker {
-  constructor(readonly line: number, private host: GutterHost) {
-    super();
-  }
-  eq(other: PlusMarker): boolean {
-    return other.line === this.line;
-  }
-  toDOM(): HTMLElement {
-    const el = document.createElement('div');
-    el.className = 'aiditor-gutter-plus';
-    el.setAttribute('aria-label', 'Annotate this block');
-    el.textContent = '+';
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.host.onPlusClick(this.line, el);
-    });
-    return el;
-  }
-}
-
 /** Collect the visible lines (0-based) from the view's current visibleRanges. */
 function collectVisibleLines(view: EditorView): VisibleLine[] {
   const { doc } = view.state;
@@ -109,65 +79,23 @@ function collectVisibleLines(view: EditorView): VisibleLine[] {
   return out;
 }
 
-/**
- * Resolve the block-start line under a pointer, handling the `.cm-embed-block`
- * gotcha: `posAtCoords` returns null inside embeds (tables/callouts), so we
- * fall back to `posAtDOM` on the embed element, then to a rect scan.
- */
-function blockLineAtCoords(view: EditorView, x: number, y: number): number | null {
-  let pos = view.posAtCoords({ x, y });
-  if (pos === null) {
-    const target = document.elementFromPoint(x, y);
-    const embed = target?.closest('.cm-embed-block') as HTMLElement | null;
-    if (embed) {
-      try {
-        pos = view.posAtDOM(embed);
-      } catch {
-        pos = null;
-      }
-    }
-  }
-  if (pos === null) {
-    // Element-rect fallback: find the visible line whose rendered rect contains y.
-    for (const { from, to } of view.visibleRanges) {
-      let p = from;
-      while (p <= to) {
-        const line = view.state.doc.lineAt(p);
-        const rect = view.coordsAtPos(line.from);
-        if (rect && y >= rect.top && y <= rect.bottom) return line.number - 1;
-        p = line.to + 1;
-      }
-    }
-    return null;
-  }
-  return view.state.doc.lineAt(pos).number - 1;
-}
-
 /** Dispatch this effect to force a gutter rebuild without a doc change (e.g. after a store mutation). */
 export const refreshAIditorGutterEffect = StateEffect.define<null>();
 
-function buildRangeSet(specs: GutterMarkerSpec[], view: EditorView, host: GutterHost, hoverLine: number | null): RangeSet<GutterMarker> {
+function buildRangeSet(specs: GutterMarkerSpec[], view: EditorView, host: GutterHost): RangeSet<GutterMarker> {
   const builder = new RangeSetBuilder<GutterMarker>();
   const { doc } = view.state;
   for (const spec of specs) {
-    if (spec.kind === 'plus' && spec.line !== hoverLine) continue; // "＋" only on the hovered block
     if (spec.line < 0 || spec.line >= doc.lines) continue;
     const from = doc.line(spec.line + 1).from;
-    const marker =
-      spec.kind === 'marker'
-        ? new AnnotationMarker(spec.count, spec.blockId, host)
-        : new PlusMarker(spec.line, host);
-    builder.add(from, from, marker);
+    builder.add(from, from, new AnnotationMarker(spec.count, spec.blockId, host));
   }
   return builder.finish();
 }
 
 class AIditorGutterPlugin implements PluginValue {
   markers: RangeSet<GutterMarker> = RangeSet.empty;
-  private hoverLine: number | null = null;
   private unsubscribe: () => void;
-  private onMove: (e: MouseEvent) => void;
-  private onLeave: () => void;
 
   constructor(private view: EditorView, private host: GutterHost) {
     this.recompute();
@@ -175,29 +103,12 @@ class AIditorGutterPlugin implements PluginValue {
     this.unsubscribe = host.onStoreChange(() => {
       this.view.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
     });
-    this.onMove = (e: MouseEvent) => {
-      const line = blockLineAtCoords(this.view, e.clientX, e.clientY);
-      if (line !== this.hoverLine) {
-        this.hoverLine = line;
-        this.recompute();
-        this.view.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
-      }
-    };
-    this.onLeave = () => {
-      if (this.hoverLine !== null) {
-        this.hoverLine = null;
-        this.recompute();
-        this.view.dispatch({ effects: refreshAIditorGutterEffect.of(null) });
-      }
-    };
-    this.view.dom.addEventListener('mousemove', this.onMove);
-    this.view.dom.addEventListener('mouseleave', this.onLeave);
   }
 
   private recompute(): void {
     const visible = collectVisibleLines(this.view);
     const specs = deriveGutterMarkers(visible, this.host.countForBlockId);
-    this.markers = buildRangeSet(specs, this.view, this.host, this.hoverLine);
+    this.markers = buildRangeSet(specs, this.view, this.host);
   }
 
   update(update: ViewUpdate): void {
@@ -209,8 +120,6 @@ class AIditorGutterPlugin implements PluginValue {
 
   destroy(): void {
     this.unsubscribe();
-    this.view.dom.removeEventListener('mousemove', this.onMove);
-    this.view.dom.removeEventListener('mouseleave', this.onLeave);
   }
 }
 

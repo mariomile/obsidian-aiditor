@@ -57,9 +57,6 @@ export default class AIditorPlugin extends Plugin {
         const anchor: VirtualElement = { getBoundingClientRect: () => rect };
         this.popover.openForBlock(blockId, notePath ?? undefined, anchor);
       },
-      onPlusClick: (line, dom) => {
-        void this.annotateAtLine(line, dom);
-      },
       onStoreChange: (listener) => this.store.onChange(() => listener()),
     };
     this.registerEditorExtension(aiditorGutterExtension(gutterHost, this.settings.gutterSide));
@@ -128,23 +125,6 @@ export default class AIditorPlugin extends Plugin {
   private async runCreateAnnotation(): Promise<void> {
     try {
       await createAnnotation({ app: this.app, store: this.store, openPopover: this.openPopoverSeam });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      new Notice(`AIditor: ${message}`);
-    }
-  }
-
-  private async annotateAtLine(line: number, dom: HTMLElement): Promise<void> {
-    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!view?.editor) return;
-    view.editor.setCursor({ line, ch: 0 });
-    try {
-      const openAt: OpenAnnotationPopover = ({ annotationId }) => {
-        const rect = dom.getBoundingClientRect();
-        const anchor: VirtualElement = { getBoundingClientRect: () => rect };
-        this.popover.open(annotationId, anchor, { focusBody: true });
-      };
-      await createAnnotation({ app: this.app, store: this.store, openPopover: openAt });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       new Notice(`AIditor: ${message}`);

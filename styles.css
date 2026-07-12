@@ -15,8 +15,7 @@
   width: 1.4em;
 }
 
-.aiditor-gutter-marker,
-.aiditor-gutter-plus {
+.aiditor-gutter-marker {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,9 +26,6 @@
   cursor: pointer;
   font-size: 0.75em;
   line-height: 1;
-}
-
-.aiditor-gutter-marker {
   background: var(--interactive-accent);
   opacity: 0.75;
 }
@@ -42,21 +38,6 @@
   color: var(--text-on-accent);
   font-size: 0.7em;
   font-weight: 600;
-}
-
-.aiditor-gutter-plus {
-  color: var(--text-faint);
-  opacity: 0;
-  transition: opacity 0.1s ease;
-}
-
-.aiditor-gutter:hover .aiditor-gutter-plus {
-  opacity: 0.6;
-}
-
-.aiditor-gutter-plus:hover {
-  opacity: 1 !important;
-  color: var(--text-accent);
 }
 
 /* ---------- Popover ---------- */
