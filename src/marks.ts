@@ -28,8 +28,8 @@ import type { Annotation } from './model.ts';
 const MARK_ATTR = 'data-aiditor-id';
 
 export interface MarksHost {
-  /** Active annotations whose notePath is the note currently shown to the user. */
-  activeAnnotations: () => Annotation[];
+  /** Active + resolved annotations for the note currently shown to the user. */
+  visibleAnnotations: () => Annotation[];
   /** Open the popover for a clicked annotation, anchored to its highlighted `dom`. */
   onMarkClick: (annotationId: string, dom: HTMLElement) => void;
   /** Subscribe to store changes (resolve/reopen/delete/add); returns an unsubscribe. */
@@ -41,18 +41,18 @@ export const refreshAIditorMarksEffect = StateEffect.define<null>();
 
 function buildDecorations(view: EditorView, host: MarksHost): DecorationSet {
   const text = view.state.doc.toString();
-  const ranges: { from: number; to: number; id: string }[] = [];
-  for (const a of host.activeAnnotations()) {
+  const ranges: { from: number; to: number; id: string; resolved: boolean }[] = [];
+  for (const a of host.visibleAnnotations()) {
     const m = matchQuote(text, { quote: a.quote, prefix: a.prefix, suffix: a.suffix });
     if (!m || m.start >= m.end || m.end > text.length) continue;
-    ranges.push({ from: m.start, to: m.end, id: a.id });
+    ranges.push({ from: m.start, to: m.end, id: a.id, resolved: a.status === 'resolved' });
   }
   // RangeSet requires ascending order by `from` (then `to`).
   ranges.sort((x, y) => x.from - y.from || x.to - y.to);
   return Decoration.set(
     ranges.map((r) =>
       Decoration.mark({
-        class: 'aiditor-comment-mark',
+        class: r.resolved ? 'aiditor-comment-mark aiditor-comment-mark--resolved' : 'aiditor-comment-mark',
         attributes: { [MARK_ATTR]: r.id },
       }).range(r.from, r.to),
     ),

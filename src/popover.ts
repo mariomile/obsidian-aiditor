@@ -16,7 +16,13 @@ import { Component, MarkdownView, Notice, setIcon, type App } from 'obsidian';
 import { computePosition, autoUpdate, offset, flip, shift, type VirtualElement } from '@floating-ui/dom';
 import { extractPrefix, extractSuffix, type BlockSpan } from './anchor-core.ts';
 import { ensureBlockId } from './anchor.ts';
-import { annotationsForBlock, isSaveShortcut, shouldDismissOnOutsideMousedown } from './popover-core.ts';
+import {
+  annotationsForBlock,
+  shouldDismissOnOutsideMousedown,
+  shouldDiscardBody,
+  selectPopoverMode,
+  formatCommentTime,
+} from './popover-core.ts';
 import type { AnnotationVaultStore } from './store.ts';
 
 const CONTEXT_LEN = 32;
@@ -41,6 +47,8 @@ export class AnnotationPopover extends Component {
   private cleanupAutoUpdate: (() => void) | null = null;
   /** True only for the tick in which the popover opened — see show()/shouldDismissOnOutsideMousedown. */
   private justOpened = false;
+  /** The live composer textarea while a single annotation is shown; null otherwise. */
+  private bodyEl: HTMLTextAreaElement | null = null;
 
   constructor(private deps: PopoverDeps) {
     super();
@@ -118,6 +126,18 @@ export class AnnotationPopover extends Component {
 
   close(): void {
     if (!this.visible) return;
+    // Notion model: a comment left empty on dismiss is discarded (record + mark);
+    // otherwise flush the composer so no edit is lost. Read the textarea directly
+    // to avoid depending on blur/mousedown ordering.
+    if (this.annotationId && this.bodyEl) {
+      const body = this.bodyEl.value;
+      if (shouldDiscardBody(body)) {
+        this.deps.store.delete(this.annotationId);
+      } else {
+        this.deps.store.updateBody(this.annotationId, body);
+      }
+    }
+    this.bodyEl = null;
     this.visible = false;
     this.annotationId = null;
     this.blockScope = null;
@@ -129,6 +149,7 @@ export class AnnotationPopover extends Component {
 
   private render(): void {
     this.el.empty();
+    this.bodyEl = null;
 
     // Block-scoped with multiple annotations and none selected yet → picker.
     if (this.blockScope && this.annotationId === null) {
@@ -154,7 +175,10 @@ export class AnnotationPopover extends Component {
     const listEl = this.el.createDiv({ cls: 'aiditor-popover-list' });
     for (const a of list) {
       const item = listEl.createDiv({ cls: 'aiditor-popover-list-item' });
-      item.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
+      // No chip for the default "active" state; only resolved/orphaned carry one.
+      if (a.status !== 'active') {
+        item.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
+      }
       item.createSpan({ cls: 'aiditor-popover-list-item-body', text: a.body || a.quote || '(empty)' });
       this.registerDomEvent(item, 'click', () => {
         this.annotationId = a.id;
@@ -185,46 +209,80 @@ export class AnnotationPopover extends Component {
       }
     }
 
-    const header = this.el.createDiv({ cls: 'aiditor-popover-header' });
-    header.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
+    // Orphaned is the ONLY status that keeps a visible signal (a lost anchor is
+    // an error condition, not a default). Active/resolved show no status chip.
+    if (a.status === 'orphaned') {
+      const warn = this.el.createDiv({ cls: 'aiditor-popover-warning' });
+      setIcon(warn.createSpan({ cls: 'aiditor-popover-warning-icon' }), 'unlink');
+      warn.createSpan({ text: 'Anchor lost — re-anchor to a selection' });
+    }
+
     if (a.quote) {
       this.el.createDiv({ cls: 'aiditor-popover-quote', text: a.quote });
     }
 
+    const mode = selectPopoverMode(a.body);
+
     const textarea = this.el.createEl('textarea', {
       cls: 'aiditor-popover-body',
-      attr: { placeholder: 'Annotation…' },
+      attr: { placeholder: 'Write a comment…' },
     });
     textarea.value = a.body;
-    const save = () => store.updateBody(a.id, textarea.value);
-    this.registerDomEvent(textarea, 'blur', save);
+    this.bodyEl = textarea;
+
+    const saveAndClose = () => {
+      store.updateBody(a.id, textarea.value);
+      this.close();
+    };
+    this.registerDomEvent(textarea, 'blur', () => store.updateBody(a.id, textarea.value));
     this.registerDomEvent(textarea, 'keydown', (e) => {
-      if (isSaveShortcut(e)) {
+      // Enter (and Cmd/Ctrl+Enter) submit; Shift+Enter inserts a newline.
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        save();
-        new Notice('AIditor: annotation saved.');
+        if (shouldDiscardBody(textarea.value)) {
+          this.close(); // empty → close() discards the record + mark
+          return;
+        }
+        saveAndClose();
       }
     });
 
-    const actions = this.el.createDiv({ cls: 'aiditor-popover-actions' });
+    const footer = this.el.createDiv({ cls: 'aiditor-popover-footer' });
 
-    if (a.status === 'active') {
-      this.actionBtn(actions, 'check', 'Resolve', () => {
-        store.resolve(a.id);
-        this.close();
+    if (mode === 'compose') {
+      const send = footer.createEl('button', {
+        cls: 'aiditor-popover-send',
+        attr: { 'aria-label': 'Comment' },
       });
-    } else if (a.status === 'resolved') {
-      this.actionBtn(actions, 'rotate-ccw', 'Reopen', () => {
-        store.reopen(a.id);
-        this.render();
+      setIcon(send, 'arrow-up');
+      const syncSend = () => send.toggleClass('is-disabled', shouldDiscardBody(textarea.value));
+      syncSend();
+      this.registerDomEvent(textarea, 'input', syncSend);
+      this.registerDomEvent(send, 'click', () => {
+        if (shouldDiscardBody(textarea.value)) return;
+        saveAndClose();
       });
-    } else if (a.status === 'orphaned') {
-      this.actionBtn(actions, 'link', 'Re-anchor to selection', () => void this.reanchor(a.id));
+    } else {
+      footer.createSpan({ cls: 'aiditor-popover-time', text: formatCommentTime(a.created, Date.now()) });
+      const actions = footer.createDiv({ cls: 'aiditor-popover-actions' });
+      if (a.status === 'active') {
+        this.actionBtn(actions, 'check', 'Resolve', () => {
+          store.resolve(a.id);
+          this.close();
+        });
+      } else if (a.status === 'resolved') {
+        this.actionBtn(actions, 'rotate-ccw', 'Reopen', () => {
+          store.reopen(a.id);
+          this.render();
+        });
+      } else if (a.status === 'orphaned') {
+        this.actionBtn(actions, 'link', 'Re-anchor', () => void this.reanchor(a.id));
+      }
+      this.renderDeleteControl(actions, a.id);
     }
 
-    this.renderDeleteControl(actions, a.id);
-
-    if (this.focusBody) {
+    // Focus the composer in compose mode, and whenever the create flow asked.
+    if (this.focusBody || mode === 'compose') {
       this.focusBody = false;
       window.setTimeout(() => {
         textarea.focus();
@@ -256,7 +314,10 @@ export class AnnotationPopover extends Component {
   }
 
   private actionBtn(parent: HTMLElement, icon: string, label: string, onClick: () => void): void {
-    const btn = parent.createEl('button', { cls: 'aiditor-popover-btn', attr: { 'aria-label': label } });
+    const btn = parent.createEl('button', {
+      cls: 'aiditor-popover-btn aiditor-popover-btn--primary',
+      attr: { 'aria-label': label },
+    });
     setIcon(btn, icon);
     btn.createSpan({ text: label });
     this.registerDomEvent(btn, 'click', onClick);

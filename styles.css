@@ -11,45 +11,86 @@
 
 /* ---------- Inline comment highlight (Live Preview) ---------- */
 /* Commented text is highlighted in place — no gutter, so the editor keeps its
-   full width. The span itself is the click target that opens the popover. */
+   full width. The span itself is the click target that opens the popover.
+   Curve, wash and elevation align to the Cosmos theme when it is active
+   (--mv-* / --cosmos-* tokens); each var() carries an Obsidian-native fallback
+   so AIditor looks correct on its own too. */
 
 .aiditor-comment-mark {
-  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.22);
-  border-bottom: 1px solid hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.55);
-  border-radius: 2px;
+  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.2);
+  border-bottom: 1.5px solid hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.5);
+  border-radius: 3px;
+  padding: 0 1px;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
 }
 
 .aiditor-comment-mark:hover {
-  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.38);
+  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.36);
+}
+
+/* Resolved comment: still reachable in-text, visually receded. */
+.aiditor-comment-mark--resolved {
+  background: transparent;
+  border-bottom: 1px dashed hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.4);
+  opacity: 0.65;
+}
+
+.aiditor-comment-mark--resolved:hover {
+  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.18);
+  opacity: 1;
 }
 
 /* ---------- Popover ---------- */
+/* A floating surface: takes Cosmos's dedicated pop elevation + concentric radii
+   when present, Obsidian's shadow/radius otherwise. */
 
 .aiditor-popover {
   position: absolute;
   z-index: var(--layer-popover, 70);
-  width: 280px;
-  padding: 0.75em;
-  border-radius: var(--radius-m);
+  width: 288px;
+  padding: 12px;
+  border-radius: var(--mv-r-card, var(--radius-m, 11px));
   background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  box-shadow: var(--shadow-l);
+  border: 1px solid var(--mv-hairline, var(--background-modifier-border));
+  box-shadow: var(--cosmos-pop-shadow, var(--shadow-l));
+  animation: aiditor-pop-in var(--cosmos-t-base, 180ms)
+    var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@keyframes aiditor-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aiditor-popover {
+    animation: none;
+  }
 }
 
 .aiditor-popover-header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.4em;
+  margin-bottom: 8px;
 }
 
+/* Status chip — Cosmos small-caps label recipe, pill shaped */
 .aiditor-status {
-  font-size: 0.7em;
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: var(--mv-label-weight, 600);
+  line-height: 1.5;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  padding: 0.1em 0.5em;
-  border-radius: var(--radius-s);
+  letter-spacing: var(--mv-label-track, 0.05em);
+  padding: 1px 8px;
+  border-radius: var(--cosmos-r-pill, 999px);
   background: var(--background-modifier-border);
   color: var(--text-muted);
 }
@@ -64,94 +105,226 @@
   color: var(--text-on-accent);
 }
 
+/* Quoted span — a soft inset surface, never a side-stripe */
 .aiditor-popover-quote {
   font-size: 0.85em;
   font-style: italic;
+  line-height: 1.45;
   color: var(--text-muted);
-  border-left: 2px solid var(--text-faint);
-  padding-left: 0.5em;
-  margin-bottom: 0.5em;
-  max-height: 4em;
+  background: var(--mv-card-bg, var(--background-secondary));
+  border-radius: var(--mv-r1, var(--radius-s, 6px));
+  padding: 6px 9px;
+  margin-bottom: 8px;
+  max-height: 4.5em;
   overflow-y: auto;
 }
 
 .aiditor-popover-body {
   width: 100%;
-  min-height: 4em;
+  min-height: 4.5em;
   resize: vertical;
   background: var(--background-secondary);
   color: var(--text-normal);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
-  padding: 0.4em;
+  border: 1px solid var(--mv-hairline, var(--background-modifier-border));
+  border-radius: var(--mv-r1, var(--radius-s, 6px));
+  padding: 8px;
   font-family: inherit;
   font-size: 0.9em;
+  line-height: 1.5;
+  transition: border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    box-shadow var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+}
+
+.aiditor-popover-body::placeholder {
+  color: var(--text-faint);
+}
+
+.aiditor-popover-body:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px
+    var(--mv-ring, color-mix(in srgb, var(--interactive-accent) 16%, transparent));
+}
+
+.aiditor-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .aiditor-popover-actions {
   display: flex;
-  gap: 0.4em;
-  margin-top: 0.5em;
+  gap: 6px;
+}
+
+/* Notion-style round submit — shown while a comment is still being written */
+.aiditor-popover-send {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+}
+
+.aiditor-popover-send:hover {
+  background: var(--interactive-accent-hover);
+}
+
+.aiditor-popover-send:active {
+  transform: scale(var(--cosmos-press-scale, 0.98));
+}
+
+.aiditor-popover-send .svg-icon,
+.aiditor-popover-send svg {
+  width: 16px;
+  height: 16px;
+}
+
+.aiditor-popover-send.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.aiditor-popover-time {
+  font-size: 0.75em;
+  color: var(--text-faint);
+}
+
+/* Orphaned-only warning row */
+.aiditor-popover-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8em;
+  color: var(--color-orange, var(--text-error));
+  margin-bottom: 8px;
+}
+
+.aiditor-popover-warning-icon {
+  display: inline-flex;
+}
+
+.aiditor-popover-warning-icon .svg-icon,
+.aiditor-popover-warning-icon svg {
+  width: 14px;
+  height: 14px;
 }
 
 .aiditor-popover-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3em;
+  gap: 5px;
   font-size: 0.8em;
-  padding: 0.25em 0.5em;
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
+  font-weight: 500;
+  padding: 5px 10px;
+  background: var(--mv-card-bg, var(--background-secondary));
+  border: 1px solid var(--mv-hairline, var(--background-modifier-border));
+  border-radius: var(--mv-r1, var(--radius-s, 6px));
   color: var(--text-normal);
   cursor: pointer;
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    transform var(--cosmos-t-fast, 140ms)
+      var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.aiditor-popover-btn .svg-icon,
+.aiditor-popover-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .aiditor-popover-btn:hover {
-  background: var(--background-modifier-hover);
+  background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+  border-color: color-mix(in srgb, var(--text-muted) 22%, transparent);
+}
+
+.aiditor-popover-btn:active {
+  transform: scale(var(--cosmos-press-scale, 0.98));
+}
+
+.aiditor-popover-btn:focus-visible {
+  outline: var(--cosmos-focus-ring,
+      2px solid color-mix(in srgb, var(--interactive-accent) 55%, transparent));
+  outline-offset: var(--cosmos-focus-offset, 1px);
+}
+
+/* Affirmative action (Resolve / Reopen / Re-anchor) — a quiet primary:
+   accent-tinted, not a loud solid CTA (suite form-language). */
+.aiditor-popover-btn--primary {
+  background: var(--mv-ring, color-mix(in srgb, var(--interactive-accent) 14%, transparent));
+  border-color: color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+  color: var(--interactive-accent);
+}
+
+.aiditor-popover-btn--primary:hover {
+  background: color-mix(in srgb, var(--interactive-accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
 }
 
 .aiditor-popover-empty {
   color: var(--text-muted);
   font-size: 0.85em;
+  padding: 4px 2px;
 }
 
 .aiditor-popover-btn--danger.is-armed {
-  border-color: var(--text-error);
+  background: color-mix(in srgb, var(--text-error) 12%, transparent);
+  border-color: color-mix(in srgb, var(--text-error) 45%, transparent);
   color: var(--text-error);
 }
 
 .aiditor-popover-btn--danger.is-armed:hover {
-  background: var(--background-modifier-error-hover);
+  background: color-mix(in srgb, var(--text-error) 20%, transparent);
 }
 
 /* Multi-annotation list (a block with >1 annotation) */
 
 .aiditor-popover-list-header {
-  font-size: 0.75em;
+  font-size: 0.68rem;
+  font-weight: var(--mv-label-weight, 600);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--mv-label-track, 0.05em);
   color: var(--text-muted);
-  margin-bottom: 0.4em;
+  margin-bottom: 8px;
 }
 
 .aiditor-popover-list {
   display: flex;
   flex-direction: column;
-  gap: 0.3em;
+  gap: 3px;
 }
 
 .aiditor-popover-list-item {
   display: flex;
   align-items: center;
-  gap: 0.4em;
-  padding: 0.35em 0.5em;
-  border-radius: var(--radius-s);
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--mv-r1, var(--radius-s, 6px));
   cursor: pointer;
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
 }
 
 .aiditor-popover-list-item:hover {
-  background: var(--background-modifier-hover);
+  background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+}
+
+.aiditor-popover-list-item:focus-visible {
+  outline: var(--cosmos-focus-ring,
+      2px solid color-mix(in srgb, var(--interactive-accent) 55%, transparent));
+  outline-offset: var(--cosmos-focus-offset, 1px);
 }
 
 .aiditor-popover-list-item-body {
@@ -163,13 +336,20 @@
 }
 
 .aiditor-popover-back {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.2em;
+  gap: 3px;
   font-size: 0.8em;
   color: var(--text-muted);
   cursor: pointer;
-  margin-bottom: 0.4em;
+  margin-bottom: 8px;
+  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+}
+
+.aiditor-popover-back .svg-icon,
+.aiditor-popover-back svg {
+  width: 14px;
+  height: 14px;
 }
 
 .aiditor-popover-back:hover {
@@ -195,6 +375,12 @@
   font-size: 0.85em;
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
+  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+}
+
+.aiditor-panel-tab:hover {
+  color: var(--text-normal);
 }
 
 .aiditor-panel-tab.is-active {
@@ -207,15 +393,19 @@
 }
 
 .aiditor-panel-item {
-  padding: 0.5em;
-  margin-bottom: 0.4em;
-  border-radius: var(--radius-s);
-  background: var(--background-secondary);
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: var(--mv-r1, var(--radius-s, 6px));
+  background: var(--mv-card-bg, var(--background-secondary));
+  border: 1px solid transparent;
   cursor: pointer;
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
 }
 
 .aiditor-panel-item:hover {
-  background: var(--background-modifier-hover);
+  background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+  border-color: var(--mv-hairline, var(--background-modifier-border));
 }
 
 .aiditor-panel-item-quote {
@@ -248,29 +438,52 @@
 }
 
 .aiditor-panel-item-action {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3em;
+  gap: 5px;
   font-size: 0.8em;
-  padding: 0.25em 0.5em;
+  font-weight: 500;
+  padding: 5px 10px;
   background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
+  border: 1px solid var(--mv-hairline, var(--background-modifier-border));
+  border-radius: var(--mv-r1, var(--radius-s, 6px));
   color: var(--text-normal);
   cursor: pointer;
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+    transform var(--cosmos-t-fast, 140ms)
+      var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.aiditor-panel-item-action .svg-icon,
+.aiditor-panel-item-action svg {
+  width: 14px;
+  height: 14px;
 }
 
 .aiditor-panel-item-action:hover {
   background: var(--background-modifier-hover);
+  border-color: color-mix(in srgb, var(--text-muted) 22%, transparent);
+}
+
+.aiditor-panel-item-action:active {
+  transform: scale(var(--cosmos-press-scale, 0.98));
+}
+
+.aiditor-panel-item-action:focus-visible {
+  outline: var(--cosmos-focus-ring,
+      2px solid color-mix(in srgb, var(--interactive-accent) 55%, transparent));
+  outline-offset: var(--cosmos-focus-offset, 1px);
 }
 
 .aiditor-panel-item-action--danger.is-armed {
-  border-color: var(--text-error);
+  background: color-mix(in srgb, var(--text-error) 12%, transparent);
+  border-color: color-mix(in srgb, var(--text-error) 45%, transparent);
   color: var(--text-error);
 }
 
 .aiditor-panel-item-action--danger.is-armed:hover {
-  background: var(--background-modifier-error-hover);
+  background: color-mix(in srgb, var(--text-error) 20%, transparent);
 }
 
 .aiditor-panel-empty {

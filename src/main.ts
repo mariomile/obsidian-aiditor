@@ -10,14 +10,25 @@ import { AIditorPanelView, VIEW_TYPE_AIDITOR_PANEL, type PanelHost } from './pan
 import { aiditorReadingPostProcessor } from './reading.ts';
 import { DEFAULT_SETTINGS, AIditorSettingTab, type AIditorSettings } from './settings.ts';
 
+/** The subset of the (untyped) CodeMirror EditorView we read for popover anchoring. */
+interface EditorCoords {
+  coordsAtPos: (p: number) => { left: number; top: number; right: number; bottom: number } | null;
+  state: { selection: { main: { from: number; to: number } } };
+  scrollDOM: HTMLElement;
+}
+
 export default class AIditorPlugin extends Plugin {
   settings!: AIditorSettings;
   store!: AnnotationVaultStore;
 
   private popover!: AnnotationPopover;
   private unwireOrphanRecompute: (() => void) | null = null;
-  /** Public extension point (design §7): app.plugins.plugins.aiditor.addAnnotation(...) */
+  /** Public extension points (design §7): app.plugins.plugins.aiditor.*
+   *  Write path (create a comment) + read/action path (let Exo read comments
+   *  Mario left and close them once acted on). */
   addAnnotation!: AIditorApi['addAnnotation'];
+  getAnnotations!: AIditorApi['getAnnotations'];
+  resolveAnnotation!: AIditorApi['resolveAnnotation'];
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -30,6 +41,8 @@ export default class AIditorPlugin extends Plugin {
     //   app.plugins.plugins.aiditor.addAnnotation({ notePath, quote, body })
     const api = createAIditorApi({ app: this.app, store: this.store });
     this.addAnnotation = api.addAnnotation;
+    this.getAnnotations = api.getAnnotations;
+    this.resolveAnnotation = api.resolveAnnotation;
 
     this.popover = new AnnotationPopover({ app: this.app, store: this.store });
     this.addChild(this.popover);
@@ -43,11 +56,14 @@ export default class AIditorPlugin extends Plugin {
     // decorations on doc/viewport change and on store mutations that don't
     // touch the note text (resolve/reopen/delete) via MarksHost.onStoreChange.
     const marksHost: MarksHost = {
-      activeAnnotations: () => {
+      visibleAnnotations: () => {
         const notePath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path;
         return this.store
           .getAll()
-          .filter((a) => a.status === 'active' && (!notePath || a.notePath === notePath));
+          .filter(
+            (a) =>
+              (a.status === 'active' || a.status === 'resolved') && (!notePath || a.notePath === notePath),
+          );
       },
       onMarkClick: (annotationId, dom) => {
         const rect = dom.getBoundingClientRect();
@@ -109,15 +125,32 @@ export default class AIditorPlugin extends Plugin {
   }
 
   private openPopoverSeam: OpenAnnotationPopover = ({ annotationId }) => {
-    // No specific DOM anchor available from create.ts's caret-based flow —
-    // anchor to the editor's current cursor position on screen.
+    // Anchor to the selection rectangle so the composer opens right next to the
+    // commented text — never at the window center (the old head-only fallback).
     const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const cm = (view?.editor as unknown as { cm?: { coordsAtPos: (p: number) => DOMRect | null; state: { selection: { main: { head: number } } } } })?.cm;
-    const coords = cm ? cm.coordsAtPos(cm.state.selection.main.head) : null;
-    const rect = coords ?? new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
-    const anchor: VirtualElement = { getBoundingClientRect: () => rect };
+    const cm = (view?.editor as unknown as { cm?: EditorCoords })?.cm;
+    const anchor: VirtualElement = { getBoundingClientRect: () => this.selectionRect(cm) };
     this.popover.open(annotationId, anchor, { focusBody: true });
   };
+
+  /** A DOMRect spanning the current selection; falls back to the editor viewport, never the window center. */
+  private selectionRect(cm: EditorCoords | undefined): DOMRect {
+    if (cm) {
+      const { from, to } = cm.state.selection.main;
+      const a = cm.coordsAtPos(from);
+      const b = cm.coordsAtPos(to) ?? a;
+      if (a && b) {
+        const left = Math.min(a.left, b.left);
+        const top = Math.min(a.top, b.top);
+        const right = Math.max(a.right, b.right);
+        const bottom = Math.max(a.bottom, b.bottom);
+        return new DOMRect(left, top, right - left, bottom - top);
+      }
+      const r = cm.scrollDOM?.getBoundingClientRect();
+      if (r) return new DOMRect(r.left + 24, r.top + 24, 0, 0);
+    }
+    return new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
+  }
 
   private async runCreateAnnotation(): Promise<void> {
     try {
