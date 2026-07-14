@@ -25,6 +25,37 @@ export function isSaveShortcut(e: { key: string; metaKey: boolean; ctrlKey: bool
   return e.key === 'Enter' && (e.metaKey || e.ctrlKey);
 }
 
+/** A trimmed-empty body means "no comment written yet" → discard on close. */
+export function shouldDiscardBody(body: string): boolean {
+  return body.trim().length === 0;
+}
+
+export type PopoverMode = 'compose' | 'saved';
+
+/** Compose for a not-yet-written comment; Saved once it has a body. */
+export function selectPopoverMode(body: string): PopoverMode {
+  return shouldDiscardBody(body) ? 'compose' : 'saved';
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * Short comment timestamp: "HH:MM" when `created` is the same calendar day as
+ * `now`, else "D MMM" (e.g. "10 Mar"). Locale-light and deterministic.
+ */
+export function formatCommentTime(created: number, now: number): string {
+  const d = new Date(created);
+  const n = new Date(now);
+  const sameDay =
+    d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  if (sameDay) {
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
 /**
  * Whether an outside `mousedown` should dismiss the popover.
  *

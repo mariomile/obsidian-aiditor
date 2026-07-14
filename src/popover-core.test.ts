@@ -1,6 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { annotationsForBlock, isSaveShortcut, shouldDismissOnOutsideMousedown } from './popover-core.ts';
+import {
+  annotationsForBlock,
+  isSaveShortcut,
+  shouldDismissOnOutsideMousedown,
+  shouldDiscardBody,
+  selectPopoverMode,
+  formatCommentTime,
+} from './popover-core.ts';
 import { type Annotation } from './model.ts';
 
 function ann(overrides: Partial<Annotation>): Annotation {
@@ -94,5 +101,41 @@ describe('shouldDismissOnOutsideMousedown', () => {
       shouldDismissOnOutsideMousedown({ visible: false, justOpened: false, targetInsidePopover: false }),
       false,
     );
+  });
+});
+
+describe('shouldDiscardBody', () => {
+  it('treats empty and whitespace-only as discardable', () => {
+    assert.equal(shouldDiscardBody(''), true);
+    assert.equal(shouldDiscardBody('   \n\t '), true);
+  });
+
+  it('keeps a body with real content', () => {
+    assert.equal(shouldDiscardBody('hi'), false);
+  });
+});
+
+describe('selectPopoverMode', () => {
+  it('is compose for an empty body', () => {
+    assert.equal(selectPopoverMode(''), 'compose');
+    assert.equal(selectPopoverMode('  '), 'compose');
+  });
+
+  it('is saved once a body exists', () => {
+    assert.equal(selectPopoverMode('note'), 'saved');
+  });
+});
+
+describe('formatCommentTime', () => {
+  it('shows HH:MM on the same calendar day', () => {
+    const created = new Date(2026, 2, 10, 19, 3).getTime();
+    const now = new Date(2026, 2, 10, 22, 0).getTime();
+    assert.equal(formatCommentTime(created, now), '19:03');
+  });
+
+  it('shows "D MMM" on a different day', () => {
+    const created = new Date(2026, 2, 10, 19, 3).getTime();
+    const now = new Date(2026, 2, 12, 9, 0).getTime();
+    assert.equal(formatCommentTime(created, now), '10 Mar');
   });
 });
