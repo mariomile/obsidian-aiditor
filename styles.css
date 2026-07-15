@@ -22,7 +22,7 @@
   border-radius: 3px;
   padding: 0 1px;
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-comment-mark:hover {
@@ -131,8 +131,8 @@
   font-family: inherit;
   font-size: 0.9em;
   line-height: 1.5;
-  transition: border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
-    box-shadow var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+  transition: border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    box-shadow var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-popover-body::placeholder {
@@ -173,9 +173,9 @@
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1)),
-    opacity var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+    opacity var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-popover-send:hover {
@@ -234,8 +234,8 @@
   border-radius: var(--mv-r1, var(--radius-s, 6px));
   color: var(--text-normal);
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
-    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     transform var(--cosmos-t-fast, 140ms)
       var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
@@ -314,7 +314,7 @@
   padding: 6px 8px;
   border-radius: var(--mv-r1, var(--radius-s, 6px));
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-popover-list-item:hover {
@@ -343,7 +343,7 @@
   color: var(--text-muted);
   cursor: pointer;
   margin-bottom: 8px;
-  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-popover-back .svg-icon,
@@ -375,8 +375,8 @@
   font-size: 0.85em;
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
-  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
-    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-panel-tab:hover {
@@ -399,8 +399,8 @@
   background: var(--mv-card-bg, var(--background-secondary));
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
-    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease);
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
 .aiditor-panel-item:hover {
@@ -449,8 +449,8 @@
   border-radius: var(--mv-r1, var(--radius-s, 6px));
   color: var(--text-normal);
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
-    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, ease),
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     transform var(--cosmos-t-fast, 140ms)
       var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
