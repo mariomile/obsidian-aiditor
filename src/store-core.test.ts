@@ -9,6 +9,8 @@ import {
   reanchorAnnotation,
   filterByStatus,
   recomputeOrphans,
+  getAnnotations,
+  OPEN_STATUSES,
 } from './store-core.ts';
 import { emptyStore, type Annotation, type AnnotationStore } from './model.ts';
 
@@ -233,5 +235,41 @@ describe('recomputeOrphans', () => {
     };
     const next = recomputeOrphans(store, 'Note.md', 'no ids here', 6000);
     assert.equal(next.annotations[0]!.updated, 42);
+  });
+});
+
+describe('getAnnotations (public read query)', () => {
+  const store: AnnotationStore = {
+    version: 1,
+    annotations: [
+      makeAnnotation({ id: 'a', notePath: 'Note A.md', status: 'active' }),
+      makeAnnotation({ id: 'o', notePath: 'Note A.md', status: 'orphaned' }),
+      makeAnnotation({ id: 'r', notePath: 'Note A.md', status: 'resolved' }),
+      makeAnnotation({ id: 'b', notePath: 'Note B.md', status: 'active' }),
+    ],
+  };
+
+  it('defaults to the open set (active + orphaned), never resolved', () => {
+    const ids = getAnnotations(store).map((a) => a.id).sort();
+    assert.deepEqual(ids, ['a', 'b', 'o']);
+    assert.deepEqual([...OPEN_STATUSES].sort(), ['active', 'orphaned']);
+  });
+
+  it('scopes to a single note when notePath is given', () => {
+    assert.deepEqual(getAnnotations(store, { notePath: 'Note B.md' }).map((a) => a.id), ['b']);
+  });
+
+  it('honors an explicit status filter (single value and array)', () => {
+    assert.deepEqual(getAnnotations(store, { status: 'resolved' }).map((a) => a.id), ['r']);
+    assert.deepEqual(
+      getAnnotations(store, { notePath: 'Note A.md', status: ['active', 'resolved'] }).map((a) => a.id).sort(),
+      ['a', 'r'],
+    );
+  });
+
+  it('does not mutate the input store', () => {
+    const before = store.annotations.length;
+    getAnnotations(store, { status: 'active' });
+    assert.equal(store.annotations.length, before);
   });
 });

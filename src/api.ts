@@ -1,18 +1,24 @@
 /**
- * Public API stub (design §7) — mirrors Exo's askExo cross-plugin pattern.
- * Consumers: app.plugins.plugins.aiditor.addAnnotation({ notePath, quote, body }).
+ * Public API (design §7) — mirrors Exo's askExo cross-plugin pattern.
+ * Consumers: app.plugins.plugins.aiditor.{addAnnotation,getAnnotations,resolveAnnotation}(...).
  *
- * STUB ONLY — no AI flow, no Exo coupling. Locates the quote in the note
- * text, stamps a ^ai-id after that block, creates an 'active' annotation,
- * and returns the new annotation id.
+ * Write path (addAnnotation): locates the quote in the note text, stamps a
+ * ^ai-id after that block, creates an 'active' annotation, returns its id.
+ * Read path (getAnnotations / resolveAnnotation): lets sibling plugins — Exo
+ * first — read the comments Mario left and close them once acted on, so
+ * annotations are legible and actionable to the AI, not locked in the sidecar.
  */
 
 import type { App } from 'obsidian';
 import { extractPrefix, extractSuffix, matchQuote } from './anchor-core.ts';
 import { ensureBlockId } from './anchor.ts';
+import type { Annotation } from './model.ts';
+import { getAnnotations as getAnnotationsCore, type GetAnnotationsFilter } from './store-core.ts';
 import type { AnnotationVaultStore } from './store.ts';
 
 const CONTEXT_LEN = 32;
+
+export type { GetAnnotationsFilter } from './store-core.ts';
 
 export interface AddAnnotationInput {
   notePath: string;
@@ -92,6 +98,28 @@ export function createAIditorApi({ app, store }: AIditorApiDeps) {
       });
 
       return annotationId;
+    },
+
+    /**
+     * getAnnotations — the public read path. Returns the store's annotations
+     * (canonical `Annotation` objects) filtered by note and status. With no
+     * filter, returns every unresolved annotation across the vault. Read-only:
+     * never mutates the store. Consumers must not mutate the returned objects.
+     */
+    getAnnotations(filter: GetAnnotationsFilter = {}): Annotation[] {
+      return getAnnotationsCore(store.getStore(), filter);
+    },
+
+    /**
+     * resolveAnnotation — the public action path. Marks an annotation resolved
+     * by id so a sibling plugin (Exo) can close a comment once it has acted on
+     * it. Returns `false` when no annotation with that id exists (nothing to
+     * resolve), `true` when the transition was applied.
+     */
+    resolveAnnotation(id: string): boolean {
+      if (!store.getById(id)) return false;
+      store.resolve(id);
+      return true;
     },
   };
 }

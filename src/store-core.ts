@@ -127,6 +127,37 @@ export function filterByStatus(
 }
 
 /**
+ * The default status set for the public read API when a caller passes no
+ * `status`: everything not yet resolved. An AI reader wants what still needs
+ * attention (`active` marks that anchor to live text, `orphaned` marks whose
+ * text was edited away) — never the archived resolved trail.
+ */
+export const OPEN_STATUSES: readonly AnnotationStatus[] = ['active', 'orphaned'];
+
+export interface GetAnnotationsFilter {
+  /** Restrict to a single note (vault path). Omit → all notes. */
+  notePath?: string;
+  /** Restrict to one or more statuses. Omit → {@link OPEN_STATUSES}. */
+  status?: AnnotationStatus | AnnotationStatus[];
+}
+
+/**
+ * Pure read query backing the public `getAnnotations` API. Applies the
+ * status default policy (open set) and optional note scoping. Never mutates.
+ */
+export function getAnnotations(store: AnnotationStore, filter: GetAnnotationsFilter = {}): Annotation[] {
+  const statuses = filter.status === undefined
+    ? OPEN_STATUSES
+    : Array.isArray(filter.status)
+      ? filter.status
+      : [filter.status];
+  const statusSet = new Set<AnnotationStatus>(statuses);
+  return store.annotations.filter(
+    (a) => statusSet.has(a.status) && (filter.notePath === undefined || a.notePath === filter.notePath),
+  );
+}
+
+/**
  * For every non-resolved annotation belonging to `notePath`, checks whether its
  * blockId is still present in `noteText` (scanned via anchor-core's standalone
  * ^ai-id scanner). Missing → marked `orphaned`. Present again → `active`.
