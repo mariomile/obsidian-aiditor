@@ -121,7 +121,7 @@ Pure cores that MUST have tests: `anchor-core` (id gen determinism given a seed/
 
 - Package manager **pnpm**; `type: module`; author "Mario Miletta"; MIT.
 - `esbuild.config.mjs` copied from composer (cjs, target es2021, externals include `obsidian`, `electron`, all `@codemirror/*`, node builtins; `.obsidian-plugin-dir` deploy; `production` arg minifies).
-- `.obsidian-plugin-dir` → `/Users/mariomiletta/Vaults/marioverse.ai/.obsidian/plugins/aiditor` (build deploys fresh `main.js` + `manifest.json` + `styles.css` there; the plugin still has to be enabled by Mario in Obsidian — do not auto-enable).
+- `.obsidian-plugin-dir` → your vault's `.obsidian/plugins/aiditor` (build deploys fresh `main.js` + `manifest.json` + `styles.css` there; the plugin still has to be enabled in Obsidian — do not auto-enable).
 - `tsconfig.json` copied from composer (strict, noUncheckedIndexedAccess, Bundler resolution, lib ES2021+DOM).
 - Scripts: `dev` (watch), `build` = `pnpm typecheck && node esbuild.config.mjs production`, `typecheck` = `tsc --noEmit`, `test` = `node --experimental-strip-types --test "src/**/*.test.ts"`.
 - Deps to pin like composer: `@codemirror/state`, `@codemirror/view`, `@floating-ui/dom`, `obsidian`, `esbuild`, `typescript`, `@types/node`.
