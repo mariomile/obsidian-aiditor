@@ -8,6 +8,11 @@ Not in scope for MVP: multi-user, threading/replies, AI-generated annotations (o
 
 Part of the marioverse Obsidian plugin suite.
 
+<p align="center">
+  <img src="docs/annotation.png" width="900" alt="AIditor — an inline annotation highlight" />
+</p>
+<p align="center"><em>An annotated block, highlighted inline with its block anchor visible below.</em></p>
+
 ## Anchoring model
 
 Each annotated block gets an Obsidian block reference, `^ai-<6-char-id>`, inserted on a **standalone line** immediately after the block — never inline (inline `^id` breaks `hr`/table rendering). That block-id is the durable anchor: it lives inside the note file itself, so it survives edits and syncs across devices with zero external state.
