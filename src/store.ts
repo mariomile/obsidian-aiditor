@@ -33,13 +33,19 @@ function isValidStore(value: unknown): value is AnnotationStore {
  * subscribers (gutter, panel) on every mutation.
  */
 export class AnnotationVaultStore {
+  private readonly vault: Vault;
   private store: AnnotationStore = emptyStore();
   private listeners = new Set<StoreChangeListener>();
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private dirty = false;
   private inFlightWrite: Promise<void> | null = null;
+  private revision = 0;
+  private persistedRevision = 0;
+  private queuedRevision = 0;
+  private consecutiveFailures = 0;
 
-  constructor(private readonly vault: Vault) {}
+  constructor(vault: Vault) {
+    this.vault = vault;
+  }
 
   /** Loads the store from disk. Missing or corrupt file → empty store, never throws. */
   async load(): Promise<void> {
@@ -88,6 +94,8 @@ export class AnnotationVaultStore {
 
   private setStore(next: AnnotationStore): void {
     this.store = next;
+    this.revision++;
+    this.consecutiveFailures = 0;
     this.notify();
     this.scheduleWrite();
   }
@@ -127,11 +135,12 @@ export class AnnotationVaultStore {
   }
 
   private scheduleWrite(): void {
-    this.dirty = true;
     if (this.debounceTimer !== null) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.debounceTimer = null;
-      void this.flush();
+      void this.flush().catch((error: unknown) => {
+        console.error('AIditor: failed to persist annotations', error);
+      });
     }, DEBOUNCE_MS);
   }
 
@@ -146,20 +155,51 @@ export class AnnotationVaultStore {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    if (!this.dirty) return;
-    // Serialize writes: if one is already in flight, chain after it rather
-    // than racing two adapter.write calls against the same file.
-    const previous = this.inFlightWrite ?? Promise.resolve();
-    const run = previous.then(() => this.writeNow());
-    this.inFlightWrite = run;
-    await run;
+    if (this.revision <= this.persistedRevision) return;
+    if (this.revision <= this.queuedRevision && this.inFlightWrite) {
+      await this.inFlightWrite;
+      return;
+    }
+
+    // Capture the exact revision now. Later mutations queue a second snapshot
+    // after this one instead of being incorrectly marked as persisted by it.
+    const targetRevision = this.revision;
+    const payload = JSON.stringify(this.store, null, 2);
+    this.queuedRevision = targetRevision;
+    const previous = this.inFlightWrite?.catch(() => undefined) ?? Promise.resolve();
+    const run = previous
+      .then(() => this.writeSnapshot(payload))
+      .then(
+        () => {
+          this.persistedRevision = Math.max(this.persistedRevision, targetRevision);
+          this.consecutiveFailures = 0;
+        },
+        (error: unknown) => {
+          this.consecutiveFailures++;
+          if (this.queuedRevision <= targetRevision) {
+            this.queuedRevision = this.persistedRevision;
+          }
+          throw error;
+        },
+      );
+    const tracked = run.finally(() => {
+      if (this.inFlightWrite === tracked) this.inFlightWrite = null;
+      if (
+        this.revision > this.queuedRevision &&
+        this.debounceTimer === null &&
+        this.consecutiveFailures <= 3
+      ) {
+        this.scheduleWrite();
+      }
+    });
+    this.inFlightWrite = tracked;
+    await tracked;
   }
 
-  private async writeNow(): Promise<void> {
-    this.dirty = false;
+  private async writeSnapshot(payload: string): Promise<void> {
     const adapter = this.vault.adapter;
     const dirExists = await adapter.exists(ANNOTATIONS_DIR);
     if (!dirExists) await adapter.mkdir(ANNOTATIONS_DIR);
-    await adapter.write(STORE_PATH, JSON.stringify(this.store, null, 2));
+    await adapter.write(STORE_PATH, payload);
   }
 }
