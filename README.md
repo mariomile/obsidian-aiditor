@@ -6,6 +6,8 @@ Attach a comment to a specific block in a note **without mutating the block's pr
 
 Not in scope for MVP: multi-user, threading/replies, AI-generated annotations (only the extension point, see below), a global cross-vault annotation browser, export.
 
+Part of the marioverse Obsidian plugin suite.
+
 ## Anchoring model
 
 Each annotated block gets an Obsidian block reference, `^ai-<6-char-id>`, inserted on a **standalone line** immediately after the block — never inline (inline `^id` breaks `hr`/table rendering). That block-id is the durable anchor: it lives inside the note file itself, so it survives edits and syncs across devices with zero external state.
