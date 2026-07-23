@@ -81,3 +81,8 @@ pnpm test          # node --test over src/**/*.test.ts (pure-core unit tests)
 
 - **AIditor: Annotate selection** — ships with **no default hotkey**, so it never collides with your existing bindings. Bind one yourself in Settings → Hotkeys → search "AIditor".
 - **AIditor: Open annotations panel** — opens the right-sidebar panel showing Active / Resolved / Orphaned annotations for the currently active note.
+
+## Try it
+
+See it running in the [Obsidianverse sample vault](https://github.com/mariomile/obsidianverse-sample-vault) — a small, fictional vault with the whole plugin suite pre-configured.
+
