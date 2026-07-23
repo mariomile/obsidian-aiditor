@@ -40,9 +40,13 @@ export interface MarksHost {
 export const refreshAIditorMarksEffect = StateEffect.define<null>();
 
 function buildDecorations(view: EditorView, host: MarksHost): DecorationSet {
+  const annotations = host.visibleAnnotations();
+  // Fast path for the common case (note with no annotations): skip
+  // materializing the whole doc to a string on every keystroke.
+  if (annotations.length === 0) return Decoration.none;
   const text = view.state.doc.toString();
   const ranges: { from: number; to: number; id: string; resolved: boolean }[] = [];
-  for (const a of host.visibleAnnotations()) {
+  for (const a of annotations) {
     const m = matchQuote(text, { quote: a.quote, prefix: a.prefix, suffix: a.suffix });
     if (!m || m.start >= m.end || m.end > text.length) continue;
     ranges.push({ from: m.start, to: m.end, id: a.id, resolved: a.status === 'resolved' });
@@ -73,7 +77,11 @@ class AIditorMarksPlugin implements PluginValue {
 
   update(update: ViewUpdate): void {
     const forced = update.transactions.some((tr) => tr.effects.some((e) => e.is(refreshAIditorMarksEffect)));
-    if (update.docChanged || update.viewportChanged || forced) {
+    // Marks are a full-doc RangeSet with absolute positions, so they don't
+    // depend on the viewport — CM6 renders only the visible ones. Rebuilding on
+    // viewportChanged (every scroll) re-ran doc.toString() + matchQuote for
+    // nothing; rebuild only on real content/store/note changes.
+    if (update.docChanged || forced) {
       this.decorations = buildDecorations(update.view, this.host);
     }
   }
