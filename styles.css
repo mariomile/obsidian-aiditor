@@ -50,7 +50,7 @@
   z-index: var(--layer-popover, 70);
   width: 288px;
   padding: 12px;
-  border-radius: var(--mv-r-card, var(--radius-m, 11px));
+  border-radius: var(--cosmos-r-floating-surface, var(--mv-r-card, var(--radius-m, 11px)));
   background: var(--background-primary);
   border: 1px solid var(--mv-hairline, var(--background-modifier-border));
   box-shadow: var(--cosmos-pop-shadow, var(--shadow-l));
@@ -84,13 +84,15 @@
 /* Status chip — Cosmos small-caps label recipe, pill shaped */
 .aiditor-status {
   display: inline-block;
-  font-size: 0.68rem;
+  font-size: var(--font-ui-smaller, 0.68rem);
   font-weight: var(--mv-label-weight, 600);
   line-height: 1.5;
   text-transform: uppercase;
   letter-spacing: var(--mv-label-track, 0.05em);
   padding: 1px 8px;
-  border-radius: var(--cosmos-r-pill, 999px);
+  /* Full round-cap pill (round-cap idiom on a fixed tiny badge, not the
+     tab-pill surface --cosmos-r-pill names — see mv-kit audit §1). */
+  border-radius: 999px;
   background: var(--background-modifier-border);
   color: var(--text-muted);
 }
@@ -275,8 +277,8 @@
 }
 
 .aiditor-popover-empty {
-  color: var(--text-muted);
-  font-size: 0.85em;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller, 0.85em);
   padding: 4px 2px;
 }
 
@@ -293,11 +295,11 @@
 /* Multi-annotation list (a block with >1 annotation) */
 
 .aiditor-popover-list-header {
-  font-size: 0.68rem;
+  font-size: var(--font-ui-smaller, 0.68rem);
   font-weight: var(--mv-label-weight, 600);
   text-transform: uppercase;
   letter-spacing: var(--mv-label-track, 0.05em);
-  color: var(--text-muted);
+  color: var(--text-faint);
   margin-bottom: 8px;
 }
 
@@ -314,7 +316,8 @@
   padding: 6px 8px;
   border-radius: var(--mv-r1, var(--radius-s, 6px));
   cursor: pointer;
-  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
+  transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .aiditor-popover-list-item:hover {
@@ -343,7 +346,8 @@
   color: var(--text-muted);
   cursor: pointer;
   margin-bottom: 8px;
-  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
+  transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .aiditor-popover-back .svg-icon,
@@ -376,7 +380,8 @@
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
   transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
-    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .aiditor-panel-tab:hover {
@@ -400,7 +405,8 @@
   border: 1px solid transparent;
   cursor: pointer;
   transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
-    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
+    border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
+    transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .aiditor-panel-item:hover {
@@ -487,8 +493,57 @@
 }
 
 .aiditor-panel-empty {
-  color: var(--text-muted);
-  font-size: 0.85em;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller, 0.85em);
   padding: 1em 0.5em;
   text-align: center;
+}
+
+/* ---------- Phone / coarse pointer ---------- */
+/* Static, pointer-scoped block: every tappable surface clears the 44px
+   touch floor and confirms a tap with the suite press-scale. Desktop is
+   untouched — the kit enforces neither on a fine pointer. */
+
+@media (pointer: coarse) {
+  .aiditor-popover-send {
+    min-width: var(--cosmos-touch-min, 44px);
+    min-height: var(--cosmos-touch-min, 44px);
+  }
+
+  .aiditor-popover-btn,
+  .aiditor-panel-item-action,
+  .aiditor-panel-tab,
+  .aiditor-popover-list-item,
+  .aiditor-popover-back {
+    min-height: var(--cosmos-touch-min, 44px);
+  }
+
+  .aiditor-panel-tab:active,
+  .aiditor-panel-item:active,
+  .aiditor-popover-list-item:active,
+  .aiditor-popover-back:active {
+    transform: scale(var(--cosmos-press-scale, 0.98));
+  }
+
+  /* Chrome entrance on phone takes the pop-in pairing: base duration,
+     native easing (no overshoot). Same keyframe, suite-canonical timing. */
+  .aiditor-popover {
+    animation: aiditor-pop-in var(--cosmos-t-base, 180ms)
+      var(--cosmos-native, cubic-bezier(0.32, 0.72, 0, 1));
+  }
+
+  /* Nested, because this block re-declares the popover animation after the
+     top-level reduced-motion override and would otherwise resurrect it. */
+  @media (prefers-reduced-motion: reduce) {
+    .aiditor-popover {
+      animation: none;
+    }
+
+    .aiditor-panel-tab,
+    .aiditor-panel-item,
+    .aiditor-popover-list-item,
+    .aiditor-popover-back {
+      transition: none;
+    }
+  }
 }
