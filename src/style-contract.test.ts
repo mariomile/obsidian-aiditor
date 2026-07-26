@@ -150,4 +150,48 @@ describe('mv-kit style contract', () => {
 
     assert.deepEqual(violations, []);
   });
+
+  // mv-kit §1 MUST (docs/mv-kit.md, "Radius + surfaces scale" table row for
+  // --cosmos-pop-shadow): "plugins never hardcode elevation shadows for
+  // floating surfaces — consume --cosmos-pop-shadow (or fall back to its
+  // literal value) instead." A `var()` fallback that points at ANOTHER
+  // var() (e.g. `var(--cosmos-pop-shadow, var(--shadow-l))`) is not a
+  // literal — it fails silently in a Cosmos-less vault whenever the native
+  // theme doesn't define that second token, and even when it does,
+  // `--shadow-l` is a single-layer native shadow, structurally different
+  // from the kit's 2-layer Pop-tier recipe (dark:
+  // `rgba(0,0,0,.28) 0 12px 32px, rgba(0,0,0,.16) 0 2px 8px`, verbatim from
+  // cosmos-tokens.css). `.aiditor-popover` is AIditor's only Pop-tier
+  // surface (the comment popover, closes on outside-click) — this asserts
+  // its fallback is the literal recipe, not a variable reference.
+  it('§6/§1: the Pop-tier popover shadow falls back to a literal value, not another var()', () => {
+    const code = stripComments(css);
+    const match = /\.aiditor-popover\s*\{[^}]*\}/.exec(code);
+    assert.ok(match, 'expected to find a .aiditor-popover rule block');
+
+    const block = match![0];
+    const shadowDecl = /box-shadow:\s*([^;]+);/.exec(block);
+    assert.ok(shadowDecl, 'expected .aiditor-popover to declare box-shadow');
+
+    const value: string = shadowDecl![1]!;
+    assert.ok(
+      value.includes('var(--cosmos-pop-shadow'),
+      `expected box-shadow to consume --cosmos-pop-shadow, got: ${value}`,
+    );
+
+    // The fallback (everything after the first comma inside the outer
+    // var(), up to its closing paren) must NOT itself be a var() reference.
+    const fallbackMatch = /var\(\s*--cosmos-pop-shadow\s*,\s*([\s\S]+)\)$/.exec(value.trim());
+    assert.ok(fallbackMatch, `expected a var(--cosmos-pop-shadow, <fallback>) shape, got: ${value}`);
+    const fallback: string = fallbackMatch![1]!;
+    assert.ok(
+      !/^var\(/.test(fallback.trim()),
+      `fallback must be a literal shadow value, not another var() reference: "${fallback}"`,
+    );
+    // Sanity: the literal actually looks like a 2-layer rgba shadow recipe.
+    assert.ok(
+      /rgba\(0,\s*0,\s*0,\s*0\.\d+\)\s+0(px)?\s+\d+(px)?\s+\d+(px)?/.test(fallback),
+      `fallback doesn't look like the kit's 2-layer Pop-tier shadow recipe: "${fallback}"`,
+    );
+  });
 });
