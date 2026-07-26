@@ -114,7 +114,11 @@
   color: var(--text-on-accent);
 }
 
-/* Quoted span — a soft inset surface, never a side-stripe */
+/* Quoted span — a soft inset surface, never a side-stripe.
+   mv-kit §7: deliberate deviation, not tokenized — a clamped, scrollable
+   quote-capsule (max-height 4.5em), not a reading surface. 1.45 is tighter
+   than the kit's own 1.55/1.6 table on purpose, to fit more of the quoted
+   line inside the clamp; see docs/2026-07-mv-kit-audit.md §7. */
 .aiditor-popover-quote {
   font-size: 0.85em;
   font-style: italic;
@@ -139,7 +143,10 @@
   padding: 8px;
   font-family: inherit;
   font-size: 0.9em;
-  line-height: 1.5;
+  /* mv-kit §7: the comment textarea is prose the user reads and writes —
+     inherit the reading-rhythm token instead of a bare literal. Fallback
+     equals the pre-fix value; see docs/2026-07-mv-kit-audit.md §7. */
+  line-height: var(--line-height-normal, 1.5);
   transition: border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     box-shadow var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }

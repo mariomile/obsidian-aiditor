@@ -194,4 +194,32 @@ describe('mv-kit style contract', () => {
       `fallback doesn't look like the kit's 2-layer Pop-tier shadow recipe: "${fallback}"`,
     );
   });
+
+  // mv-kit §7 (Reading rhythm) — wave 2026-07 lettura, per
+  // docs/2026-07-mv-kit-audit.md's "§7 — wave 2026-07 lettura" section.
+  //
+  // "A plugin that renders prose ... inherits the reading tokens —
+  // --line-height-normal, --p-spacing, --font-text-size — rather than
+  // hardcoding its own line-height or paragraph gap." The comment textarea
+  // (.aiditor-popover-body) is prose the user reads and writes, so its
+  // line-height must consume --line-height-normal with a literal fallback.
+  // The quote capsule (.aiditor-popover-quote) is a documented deviation
+  // (see the audit doc) and is deliberately NOT asserted here — asserting
+  // it would either force a taste change or make the test lie about what
+  // was actually fixed.
+  it('§7: .aiditor-popover-body line-height consumes --line-height-normal with a literal fallback', () => {
+    const code = stripComments(css);
+    const match = /\.aiditor-popover-body\s*\{[^}]*\}/.exec(code);
+    assert.ok(match, 'expected to find a .aiditor-popover-body rule block');
+
+    const block = match![0];
+    const lineHeightDecl = /line-height:\s*([^;]+);/.exec(block);
+    assert.ok(lineHeightDecl, 'expected .aiditor-popover-body to declare line-height');
+
+    const value: string = lineHeightDecl![1]!.trim();
+    assert.ok(
+      /^var\(\s*--line-height-normal\s*,\s*[\d.]+\s*\)$/.test(value),
+      `expected line-height to be var(--line-height-normal, <literal>), got: "${value}"`,
+    );
+  });
 });
