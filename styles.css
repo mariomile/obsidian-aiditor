@@ -60,7 +60,7 @@
   border-radius: var(--cosmos-r-floating-surface, var(--mv-r-card, var(--radius-m, 11px)));
   background: var(--background-primary);
   border: 1px solid var(--mv-hairline, var(--background-modifier-border));
-  box-shadow: var(--cosmos-pop-shadow, var(--shadow-l));
+  box-shadow: var(--cosmos-pop-shadow, rgba(0, 0, 0, 0.28) 0px 12px 32px, rgba(0, 0, 0, 0.16) 0px 2px 8px);
   animation: aiditor-pop-in var(--cosmos-t-base, 180ms)
     var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
