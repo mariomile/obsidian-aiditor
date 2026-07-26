@@ -301,3 +301,137 @@ literal shadow value, not another var() reference: "var(--shadow-l)"`
 86 pass / 0 fail** (+1 test over the wave's earlier 85-test count).
 `pnpm typecheck` — 0 errors. `pnpm build` — succeeds. No lint script
 exists in this repo (unchanged, stated as-is).
+
+---
+
+## §7 — wave 2026-07 lettura
+
+Audit of `styles.css` (587 lines pre-fix, 596 post-fix) against
+`obsidian-cosmos-theme/docs/mv-kit.md` §7 "Reading rhythm" (verified at
+commit `1898860`, cantiere 3 — `docs/2026-07-24-suite-coherence-design.md`
+section B). Scope: coherence/tokenization only, per the brief — any taste
+idea this pass surfaced is filed under "Proposte per Mario (non
+applicate)" below, not applied. Reference implementations: none of the
+prior suite waves (Portal/TabX/Sonar/Horizon) had reached §7 yet at the
+time of this wave; this is the first live §7 instance in the sweep.
+
+Per-rule verdict: **tokenized** (fixed this wave, literal fallback
+unchanged) / **deliberate deviation** (documented, not tokenized, with
+reason) / **pass** (already compliant) / **N/A** (no surface of this type
+exists).
+
+Kit §7 draws a hard line: prose (note preview, chat message, card excerpt,
+search snippet) inherits `--line-height-normal` / `--p-spacing` /
+`--font-text-size`; chrome (labels, buttons, rows) stays on the §2
+`--font-ui-*` scale. AIditor's two prose candidates are both inside the
+comment popover — the quoted excerpt of the note's own text, and the
+textarea where the user writes their comment.
+
+### Prose surfaces
+
+| Surface | Before | After | Verdict |
+|---|---|---|---|
+| `.aiditor-popover-body` (textarea; also the rendered-comment read surface — the same element is used for both writing and, while not actively edited, displaying the comment text, per `src/popover.ts`) | `line-height: 1.5` — a bare literal, no token | `line-height: var(--line-height-normal, 1.5);` | **tokenized** — this is prose the user reads and writes (kit §7's own example category: "chat message"-equivalent). The kit's MUST is explicit: inherit the token "rather than hardcoding its own line-height." Fallback is the exact pre-fix literal (1.5), so a Cosmos-less vault (or any vault where `--line-height-normal` resolves to something else entirely — it's a native Obsidian variable, not a Cosmos one, so it is *always* defined) renders byte-identical. `font-size: 0.9em` was left as a relative em (not re-tokenized to `--font-text-size`): §7's MUST governs line-height/paragraph-gap/font-size *as a set* for a genuine reading pane, but 0.9em here is deliberately smaller than the note's own prose (a 288px-wide popover, not the editor) — see the deviation note below. |
+| `.aiditor-popover-quote` (the quoted excerpt of the anchored note text, e.g. `a.quote` in `src/popover.ts`) | `line-height: 1.45` | unchanged — **not tokenized** | **deliberate deviation, documented** — this is a clamped, scrollable quote-capsule (`max-height: 4.5em; overflow-y: auto`), italic, muted-coloured, inset on a card background — a citation chip, not a reading pane the user lingers in. 1.45 is *tighter* than either of the kit's own table values (1.6 desktop / 1.55 phone), which is the opposite direction a "drifted" line-height would go (drift toward looser leading is the common failure; this is a deliberate compaction to fit more of the quoted line inside the 4.5em clamp before it scrolls). Reason recorded inline in `styles.css` next to the rule (see diff) and here, per the kit's own requirement: "any deliberate deviation from the table above is recorded in the plugin's audit note with its reason — an undocumented one-off line-height is drift, the same value with a stated reason is a decision." Left as a bare literal rather than wrapped in `var(--line-height-normal, 1.45)`, because wrapping a *different* number in the reading token would misrepresent it as "the theme's reading rhythm, currently resolving to something else" when it is in fact an intentionally distinct, smaller value for a distinct surface — that reads as more confusing than an honest literal with a comment. |
+
+### `--file-line-width` / heading-scale check
+
+`grep -rn "file-line-width" styles.css src/` → **zero hits**.
+`grep -rniE "h1-size|h2-size|h3-size|h4-size|h5-size|h6-size|heading-scale|1\.618|1\.462|1\.318" styles.css src/` →
+**zero hits**. AIditor sets neither `--file-line-width` nor any heading-scale
+value anywhere in the plugin, on either desktop or phone. **Result: pass —
+the margin UI (inline comment marks in the editor, the popover, the sidebar
+panel) does not disturb the editor's own reading measure.** This matches
+the kit's MUST NOT verbatim ("a plugin sets `--file-line-width` or
+overrides the heading scale — the reading measure belongs to the theme").
+AIditor renders *in* the editor margin/popover, never as a competing
+full-width reading surface, so there was never a structural reason it would
+need to touch either token; this check confirms it doesn't, deliberately or
+by accident.
+
+### Chrome surfaces confirmed out of scope (§2, not §7)
+
+Per the brief: `.aiditor-status` (line-height 1.5, a fixed-height pill
+badge — chrome, not prose) and the margin cards / buttons
+(`.aiditor-popover-btn`, `.aiditor-panel-item-action`, etc.) stay on the §2
+`--font-ui-*` scale and were **not retokenized to §7** — confirmed
+unchanged in this wave's diff (`git diff --stat` touches only the two
+prose rules above plus their explanatory comments).
+
+### Not touched (explicit non-goals, confirmed out of scope)
+
+- `.aiditor-panel-item-body` / `.aiditor-panel-item-quote` (the sidebar
+  panel's duplicate rendering of the same comment/quote content) are the
+  same *category* of prose surface as the popover pair above, but the
+  brief scoped this wave to the two named popover selectors only
+  (`.aiditor-popover-quote`, `.aiditor-popover-body`) — flagged here,
+  deliberately not touched this wave to avoid scope creep beyond the named
+  surfaces. Filed as a proposal below.
+- `--p-spacing` and `--font-text-size` inheritance: neither prose surface
+  in scope sets a paragraph gap (`.aiditor-popover-quote` and
+  `.aiditor-popover-body` are both single-block, no internal `<p>` tags) or
+  a font-size that maps onto `--font-text-size`'s 16px/18px scale (both are
+  intentionally smaller, popover-relative `em` sizes — see the deviation
+  note above) — nothing to tokenize there without a taste change.
+- No layout/DOM changes — both fixes are a single-declaration edit
+  (one tokenized, one left as a documented literal) plus explanatory
+  comments.
+
+### Verification
+
+- `pnpm test` — pre-fix baseline: 29 suites, 86 tests, 86 pass / 0 fail.
+  Post-fix: **30 suites, 87 tests, 87 pass / 0 fail** (+1 test: "§7:
+  .aiditor-popover-body line-height consumes --line-height-normal with a
+  literal fallback"). Red-green verified: `git stash push -- styles.css`
+  reverted `styles.css` to its pre-fix state (bare `line-height: 1.5;`),
+  re-ran `pnpm test`/`node --test src/style-contract.test.ts`, confirmed
+  the new assertion failed (6 pass / 1 fail in the style-contract suite),
+  then `git stash pop` restored the fix and confirmed all 7 contract
+  assertions (87 total) pass again.
+- `pnpm typecheck` — **0 errors** (`tsc --noEmit`, clean exit).
+- `pnpm build` — succeeds (typecheck + esbuild production bundle), no new
+  errors.
+- `pnpm release:check` (`pnpm test && pnpm build`) — **green**: 30 suites /
+  87 tests / 87 pass / 0 fail, followed by a successful typecheck + build.
+- **There is no lint script in this repo** (unchanged from waves 11 and
+  §6): `package.json` exposes `dev`, `build`, `release:check`, `typecheck`,
+  `test` — no `lint`, no eslint config or dependency. Reported as-is, none
+  invented or added for this wave.
+- Desktop screenshot / live vault reload verification: **pending** — not
+  performed this wave, same as prior waves.
+- Phone verification: **pending Mario's on-device sign-off** — per hard
+  constraint, `EmulateMobile` was never enabled during this wave. §7's kit
+  table itself carries the phone/desktop line-height split (1.55 vs 1.6) as
+  a stated, intentional difference driven by the native
+  `--line-height-normal` token switching value under Cosmos's phone
+  stylesheet — AIditor's fix consumes that token rather than picking a
+  side, so both columns resolve correctly without any AIditor-side phone
+  branching needed.
+
+### Proposte per Mario (non applicate)
+
+Idee di taste emerse durante l'audit, **non applicate** in questa wave
+(coherence/tokenization only, come da brief):
+
+1. **`.aiditor-popover-body` font-size verso `--font-text-size`?** Il
+   textarea oggi è `0.9em` relativo al popover (quindi ~14.4px se il body
+   è 16px) — più piccolo del testo di lettura reale. Si potrebbe discutere
+   se il commento, essendo testo scritto/letto per intero, meriti la stessa
+   taglia della prosa della nota (`--font-text-size`, 16/18px) invece di
+   una taglia "da widget". Non applicato: cambierebbe le dimensioni visibili
+   del popover (attualmente 288px fissi) e è una scelta di taste, non di
+   coerenza — il brief vieta esplicitamente "size changes".
+2. **Estendere il fix a `.aiditor-panel-item-body`/`.aiditor-panel-item-quote`?**
+   Stessa categoria di superficie (prosa del commento/quote), stessa
+   riparazione (`line-height: var(--line-height-normal, <literal>)`)
+   applicherebbe in modo naturale. Non applicato in questa wave perché il
+   brief nomina esplicitamente solo le due selector del popover — proposta
+   per una wave di follow-up a scope identico.
+3. **Unificare 1.45 e 1.5 in un solo valore "capsule" dichiarato come
+   token locale?** Le due superfici in scope hanno leading leggermente
+   diverso (1.45 per la quote, 1.5 per il textarea) pur essendo entrambe
+   dentro lo stesso popover da 288px. Potrebbe valere la pena chiedere a
+   Mario se è una differenza intenzionale (quote più compatta perché
+   clampata, textarea più "aperto" perché editabile) o drift accumulato
+   nel tempo — il kit stesso dice di non "armonizzare" senza il suo
+   ok, quindi resta qui come domanda, non come fix.
