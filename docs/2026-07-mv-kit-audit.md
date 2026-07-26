@@ -380,9 +380,11 @@ prose rules above plus their explanatory comments).
 ### Verification
 
 - `pnpm test` — pre-fix baseline: 29 suites, 86 tests, 86 pass / 0 fail.
-  Post-fix: **30 suites, 87 tests, 87 pass / 0 fail** (+1 test: "§7:
+  Post-fix: **29 suites, 87 tests, 87 pass / 0 fail** (+1 test: "§7:
   .aiditor-popover-body line-height consumes --line-height-normal with a
-  literal fallback"). Red-green verified: `git stash push -- styles.css`
+  literal fallback" — added as an `it()` inside the existing "mv-kit style
+  contract" suite, so the suite count is unchanged; only the test count
+  grows). Red-green verified: `git stash push -- styles.css`
   reverted `styles.css` to its pre-fix state (bare `line-height: 1.5;`),
   re-ran `pnpm test`/`node --test src/style-contract.test.ts`, confirmed
   the new assertion failed (6 pass / 1 fail in the style-contract suite),
@@ -391,8 +393,10 @@ prose rules above plus their explanatory comments).
 - `pnpm typecheck` — **0 errors** (`tsc --noEmit`, clean exit).
 - `pnpm build` — succeeds (typecheck + esbuild production bundle), no new
   errors.
-- `pnpm release:check` (`pnpm test && pnpm build`) — **green**: 30 suites /
+- `pnpm release:check` (`pnpm test && pnpm build`) — **green**: 29 suites /
   87 tests / 87 pass / 0 fail, followed by a successful typecheck + build.
+  (Re-verified by running `pnpm release:check` directly and reading its
+  literal stdout — not inferred from the prior wave's count.)
 - **There is no lint script in this repo** (unchanged from waves 11 and
   §6): `package.json` exposes `dev`, `build`, `release:check`, `typecheck`,
   `test` — no `lint`, no eslint config or dependency. Reported as-is, none
