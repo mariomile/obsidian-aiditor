@@ -239,3 +239,65 @@ surface of this type exists in the plugin).
   `src/` for mobile-gating logic (none found, confirming every surface
   audited here is genuinely phone-reachable and the fix genuinely applies
   on both columns).
+
+### Correction — Pop-tier shadow fallback (post-review fix)
+
+A reviewer pass on the first submission of this wave caught a real miss:
+the Pop-tier verdict rows above (both the §1-table row and the "Pop-tier
+verdict" table) rated `box-shadow: var(--cosmos-pop-shadow, var(--shadow-l))`
+on `.aiditor-popover` as **pass**, reasoning that it was "the kit's §1 MUST
+verbatim." That reading was wrong. mv-kit.md §1's MUST reads: "plugins
+never hardcode elevation shadows for floating surfaces — consume
+`--cosmos-pop-shadow` (**or fall back to its literal value**) instead."
+`var(--shadow-l)` is a fallback to *another variable*, not a literal — it
+fails silently in a Cosmos-less vault whenever the active theme doesn't
+define `--shadow-l` either, and even where it is defined, Cosmos's own
+`theme.css` gives it as `0 14px 62px #00000040` — a single-layer shadow,
+structurally different from the kit's 2-layer Pop-tier recipe. Neither
+Ondata A model repo (`obsidian-portal`, `obsidian-tabx`) exercises this
+case — both waive it with "no floating surface exists" — so AIditor was
+the first live instance of this rule in the sweep, and it was missed.
+
+**Fix applied**: `styles.css:63` now reads:
+
+```css
+box-shadow: var(--cosmos-pop-shadow, rgba(0, 0, 0, 0.28) 0px 12px 32px, rgba(0, 0, 0, 0.16) 0px 2px 8px);
+```
+
+The literal is mv-kit.md §1's own table value for `--cosmos-pop-shadow`,
+dark variant, taken verbatim (`rgba(0,0,0,.28) 0 12px 32px,
+rgba(0,0,0,.16) 0 2px 8px`). The kit's table only publishes the dark
+literal; `cosmos-tokens.css` (`obsidian-cosmos-theme`) also carries a
+`body.theme-light` override (`rgba(0,0,0,.08) 0 12px 32px,
+rgba(0,0,0,.04) 0 2px 8px`) but mv-kit.md itself doesn't table a light
+literal, and a single `var()` fallback can't branch on theme anyway — the
+dark literal is what ships when Cosmos is entirely absent, and Cosmos's own
+`body.theme-light` rule (which overrides `--cosmos-pop-shadow` itself, not
+the plugin's fallback) takes over automatically the instant Cosmos is
+present, on either theme mode.
+
+**Corrected verdicts** (supersedes the "pass" ratings in the §1 table row
+at line 46 and the "Pop-tier verdict" table at line 164 above — those rows
+are left as originally written per this doc's append-only discipline; this
+section is the correction of record):
+
+| Surface | Desktop | Phone | Verdict |
+|---|---|---|---|
+| `.aiditor-popover` elevation shadow | was `var(--cosmos-pop-shadow, var(--shadow-l))` (var-to-var fallback, wrong shadow shape) | same | **fixed** — now `var(--cosmos-pop-shadow, rgba(0, 0, 0, 0.28) 0px 12px 32px, rgba(0, 0, 0, 0.16) 0px 2px 8px)`, the kit's §1 literal Pop-tier recipe inline. Still AIditor's only floating, outside-click-dismissed surface; no stacking with Glass or Island tiers. |
+
+**Test**: a new style-contract assertion, `§6/§1: the Pop-tier popover
+shadow falls back to a literal value, not another var()`, parses the
+`.aiditor-popover` rule block, extracts the `box-shadow` declaration's
+fallback (the text after `var(--cosmos-pop-shadow,` up to the matching
+close-paren), and asserts it is not itself a `var(...)` reference and
+looks like a 2-layer rgba shadow recipe. Red-green verified: `git stash`
+reverted `styles.css` to the pre-fix `var(--shadow-l)` state, re-ran
+`pnpm test`, confirmed the new assertion failed with `fallback must be a
+literal shadow value, not another var() reference: "var(--shadow-l)"`
+(5 pass / 1 fail), then `git stash pop` restored the fix and confirmed all
+6 contract assertions pass.
+
+**Verification (post-correction)**: `pnpm test` — **29 suites, 86 tests,
+86 pass / 0 fail** (+1 test over the wave's earlier 85-test count).
+`pnpm typecheck` — 0 errors. `pnpm build` — succeeds. No lint script
+exists in this repo (unchanged, stated as-is).
