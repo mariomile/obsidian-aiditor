@@ -97,4 +97,57 @@ describe('mv-kit style contract', () => {
       `!important count ${importantCount} exceeds the frozen ceiling of 0`,
     );
   });
+
+  // mv-kit §6 (Elevation & motion depth) — wave 2026-07 dinamica, per
+  // docs/2026-07-mv-kit-audit.md's "§6 — wave 2026-07 dinamica" section.
+  //
+  // "A touch tap must never leave a stuck hover state — plugins must not
+  // fight it with custom :hover outside @media (hover: hover) on
+  // phone-reachable elements." All 12 of AIditor's `.aiditor-*:hover` rules
+  // are phone-reachable (the highlight marks are tapped in the editor; the
+  // popover/panel render on phone with no JS mobile-gating anywhere in
+  // src/, confirmed by the existing @media (pointer: coarse) block already
+  // targeting the same selectors) — a bare rule at the top level fires on
+  // tap and leaves the wash "stuck" since touch has no pointer to leave.
+  // Brace-depth scan (ported from obsidian-portal's equivalent assertion,
+  // commit 133c93d): every unclosed `@media (hover: hover)` opener is
+  // tracked by the CSS nesting depth it opened at; a `:hover` occurrence is
+  // a violation unless it's currently inside one.
+  it('§6: every :hover selector is gated behind @media (hover: hover)', () => {
+    const lines = stripComments(css).split('\n');
+    const violations: string[] = [];
+
+    let depth = 0;
+    const mediaStack: { openedAtDepth: number; isHoverGate: boolean }[] = [];
+
+    lines.forEach((rawLine, idx) => {
+      const line = rawLine.trim();
+      const mediaOpen = /^@media\s*\(([^)]*)\)\s*\{/.exec(line);
+      if (mediaOpen) {
+        mediaStack.push({
+          openedAtDepth: depth,
+          isHoverGate: /hover:\s*hover/.test(mediaOpen[1] ?? ''),
+        });
+      }
+
+      if (/:hover\b/.test(line)) {
+        const insideHoverGate = mediaStack.some((m) => m.isHoverGate);
+        if (!insideHoverGate) {
+          violations.push(`line ${idx + 1}: "${line}"`);
+        }
+      }
+
+      const opens = (line.match(/\{/g) ?? []).length;
+      const closes = (line.match(/\}/g) ?? []).length;
+      depth += opens - closes;
+
+      let top = mediaStack.at(-1);
+      while (top !== undefined && depth <= top.openedAtDepth) {
+        mediaStack.pop();
+        top = mediaStack.at(-1);
+      }
+    });
+
+    assert.deepEqual(violations, []);
+  });
 });
