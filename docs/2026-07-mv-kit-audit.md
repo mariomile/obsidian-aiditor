@@ -139,3 +139,103 @@ fix in this wave needed one.
   `localStorage` and kills Node-dependent plugins). Every phone verdict
   above was reached statically, by reading the resulting CSS and media
   queries against the kit's phone column.
+
+---
+
+## §6 — wave 2026-07 dinamica
+
+Audit of `styles.css` (549 lines pre-fix, 587 post-fix) against
+`obsidian-cosmos-theme/docs/mv-kit.md` §6 "Elevation & motion depth"
+(commit `10f5ddc`, cantiere 2 — `docs/2026-07-24-suite-coherence-design.md`
+section B). Reference implementations consulted: `obsidian-portal` commits
+`389d564`/`133c93d`/`4b95bf2` and `obsidian-tabx` commits
+`cc65cd4`/`a792752`/`662d11a`. Scope: elevation-tier and motion-depth
+coherence only — no layout redesign, no new components, per the same
+non-goals as wave 11.
+
+Per-rule verdict: **pass** (already compliant) / **fixed** (this wave) /
+**waived** (kit rule doesn't literally apply, with reason) / **N/A** (no
+surface of this type exists in the plugin).
+
+### Pop-tier verdict (comment popover)
+
+| Surface | Desktop | Phone | Verdict |
+|---|---|---|---|
+| `.aiditor-popover` elevation shadow | `box-shadow: var(--cosmos-pop-shadow, var(--shadow-l))` — the kit's §1/§6 Pop-tier token, with Obsidian's native `--shadow-l` as the Cosmos-less fallback | same, no phone-specific shadow rule (phone re-declares only the entrance *animation*, not the shadow) | **pass** — already compliant, landed in wave 11 (§1). AIditor's only floating, outside-click-dismissed surface (the popover closes on outside click via `src/popover.ts`'s document-level listener) correctly consumes the Pop tier, not a hand-picked `box-shadow`. No stacking with Glass or Island tiers anywhere in the file. |
+
+### Elevation hierarchy
+
+| Surface | Desktop | Phone | Verdict |
+|---|---|---|---|
+| `.aiditor-popover` (Pop tier) | see above | see above | **pass** (restated from the table above for completeness against the kit's full elevation-hierarchy table) |
+| `.aiditor-panel-*` (the annotation list panel, rendered inside Obsidian's native sidebar leaf) | No AIditor-owned `box-shadow` anywhere on panel selectors | same | **pass, N/A** — the panel is a sidebar view registered via `registerView`; it renders inside Obsidian's native `.workspace-tab-container` chrome, which already carries whatever Island-tier treatment the active theme applies (same reasoning as Portal's wave-2 §6 verdict on its own rail). AIditor does not redeclare an Island shadow itself. |
+| Glass tier | Grepped `styles.css` for `backdrop-filter`/`--cosmos-glass-*`: zero hits | same | **N/A, nessuna superficie di questo tipo** — AIditor has no command-bar / floating-toolbar-over-content surface. |
+| Stacked tiers | `box-shadow` appears exactly once in the file (`.aiditor-popover`'s Pop shadow); `.aiditor-popover-body:focus`'s `box-shadow: 0 0 0 2px var(--mv-ring, …)` is a focus ring, not an elevation shadow (no blur/offset reading as depth) | same | **pass** — nothing to stack against; no MUST NOT violation. |
+
+### Hover richness
+
+| Rule | Desktop | Phone | Verdict |
+|---|---|---|---|
+| Hover gated to `@media (hover: hover)` on phone-reachable elements | **was a violation**: all 12 of the file's `:hover` rules (`.aiditor-comment-mark`, `.aiditor-comment-mark--resolved`, `.aiditor-popover-send`, `.aiditor-popover-btn`, `.aiditor-popover-btn--primary`, `.aiditor-popover-btn--danger.is-armed`, `.aiditor-popover-list-item`, `.aiditor-popover-back`, `.aiditor-panel-tab`, `.aiditor-panel-item`, `.aiditor-panel-item-action`, `.aiditor-panel-item-action--danger.is-armed`) were bare, ungated | same rule, now fixed — every one of these renders on phone too: the comment marks are the primary tap target in the editor, and the popover/panel have no JS mobile-gating anywhere in `src/` (confirmed by grep; the existing `@media (pointer: coarse)` block already targets the same selectors, proving they're phone-reachable) | **fixed** — wrapped all 12 `:hover` rules in `@media (hover: hover)`. This is the mandatory case the brief called out explicitly: `.aiditor-comment-mark` is tapped, not hovered, on phone, and an ungated `:hover` there would leave the yellow-highlight wash "stuck" after a tap with no pointer to leave it. `:focus-visible` rules (`.aiditor-popover-btn`, `.aiditor-popover-list-item`, `.aiditor-panel-item-action`) were left untouched and ungated — keyboard-only, must never be hover-gated; verified by re-reading each grouped selector before editing so none was accidentally pulled inside a hover-only block. No phone-fallback was needed for any of the 12 (unlike Portal's `.portal-collection-open`): none of AIditor's hover effects are the *sole* reveal mechanism for an otherwise-invisible control — every hovered element is already visible and actionable at rest, hover only adds a colour wash on top. Guarded by a new style-contract assertion. |
+| Colour **and** lift, never colour alone | All 12 `:hover` rules are colour/opacity washes only (`background`, `color`, `opacity`) — no `transform` in any `:hover` rule | same | **pass, waived** — same row/card distinction as Portal's wave-2 verdict: mv-kit's own code example shows `.row:hover` (colour-only) and `.card:hover` (lift-only) as two *distinct* patterns, not one rule both must satisfy. Every AIditor surface with a `:hover` rule is list-row- or button-shaped (`.aiditor-popover-list-item`, `.aiditor-panel-item`, `.aiditor-panel-tab`, button chrome), not a card; a lift on a dense annotation list row would read as jitter, not a hint. `.aiditor-popover` itself (the one surface with genuine physical depth) gets its lift on *entrance*, not hover — see `aiditor-pop-in` below. |
+| `--mv-wash` for colour transitions, `--mv-lift` for transform transitions (not interchangeable) | Every `background`/`color`/`border-color`/`opacity` transition in the file already eases with `var(--mv-wash, …)`; every `transform` transition (all on `:active` press-scale, not `:hover`) already eases with `var(--mv-lift, …)` | same | **pass, already compliant** — verified by reading every `transition:` declaration in the file (22 `--cosmos-t-fast` consumptions, per wave 11's own count): no line pairs a wash property with `--mv-lift` or a transform property with `--mv-wash`. Several selectors (`.aiditor-popover-send`, `.aiditor-popover-btn`, `.aiditor-popover-list-item`, `.aiditor-popover-back`, `.aiditor-panel-tab`, `.aiditor-panel-item`, `.aiditor-panel-item-action`) declare both a wash-eased and a lift-eased entry in the same comma-separated `transition` list — that is not the "mixed on one surface" violation the kit's MUST targets (which is about *hover richness*, i.e. what changes together in response to one interaction); here the wash fires on `:hover` and the lift-eased `transform` fires on a separate `:active` press-scale confirmation. No new fix needed; nothing to add to the style contract for this row since nothing was broken. |
+| `transform` lift never exceeds `2px` | `.aiditor-popover-body:focus`'s box-shadow ring is not a transform; every `:active` press-scale is `scale(var(--cosmos-press-scale, 0.98))`, a scale not a translate; the popover's own entrance keyframe (`aiditor-pop-in`) moves `translateY(-2px)` | same, entrance geometry doesn't change by column | **pass** — no hover-triggered lift exists at all (see row above, waived), so the `≤2px` cap has no hover-transform to check it against; it is vacuously satisfied there. The one `translateY` in the file is `-2px` on the popover's *entrance* animation (not a hover reveal), which is at the cap, not over it, and is an already-shipped, kit-compliant chrome-entrance motion (wave 11 §3), not new scope for this wave. |
+
+### Drag polish
+
+| Surface | Desktop | Phone | Verdict |
+|---|---|---|---|
+| Drag positioning via `transform` | AIditor implements no drag-and-drop anywhere: grepped `src/` for `draggable`, `dragstart`, `dragover`, `drop` — **zero hits** | same | **N/A, nessuna superficie di questo tipo** — annotations are created by text selection (`src/create.ts`) and resolved/deleted via buttons, never dragged. |
+| Drop settle via `--cosmos-native` | n/a | n/a | **N/A, nessuna superficie di questo tipo** |
+
+### Panel & tab transitions
+
+| Surface | Desktop | Phone | Verdict |
+|---|---|---|---|
+| `.aiditor-panel-tabs` tab switch (All / Active / Resolved / Orphaned) | `is-active` class toggle changes `color` + `border-bottom-color` only, on the *existing* tab-header element (`.aiditor-panel-tab.is-active`) — no content-swap crossfade exists because switching tabs re-filters the same list in place (`src/panel.ts`'s `render()` re-renders `.aiditor-panel-item` rows for the new filter, it does not slide or fade a separate content pane) | same | **pass, waived** — the kit's tab-content-swap rule ("crossfade `opacity` only, never slide the new tab in") governs *content* that gets replaced; AIditor's tab click re-filters a list into the same scroll container with no separate content panes to swap between, so there is no slide-vs-crossfade choice being made here — the row-level appearance itself already animates via each `.aiditor-panel-item`'s existing `background`/`border-color` wash transition (wave 11 §3), which is the correct *row*-tier duration, not the *panel* tier, because nothing structural is opening or closing. |
+| `.aiditor-popover` open/close (the whole comment UI appearing/disappearing) | Entrance: `aiditor-pop-in`, `var(--cosmos-t-base, 180ms)` — the kit's popover pop-in tier, not the panel tier. Close: instant DOM removal (`src/popover.ts` calls `.remove()` on outside-click/Escape), no exit animation | same, phone re-declares the same animation at the same duration with `--cosmos-native` instead of `--mv-lift` (wave 11 §3, unchanged this wave) | **pass, correctly tiered** — the popover is a Pop-tier surface (floats, dismissed by outside click, see the Pop-tier verdict above), and mv-kit's own elevation table names `--cosmos-t-base`/`cosmos-pop-in` for exactly this tier, not `--cosmos-t-panel` (which the kit reserves for *persistent* panels like a sidebar). Using the panel duration here would be over-slow for a floating, outside-click-dismissed surface. No exit animation is a pre-existing, out-of-scope product decision (wave 11 didn't touch it either), not a §6 duration/easing-token violation — the kit's MUSTs govern which tokens an *existing* transition uses, not whether every possible transition must exist. |
+| `.aiditor-panel-*` (the sidebar view itself) opening/closing | Governed entirely by Obsidian's native `registerView`/leaf-open machinery — AIditor owns no CSS for the sidebar leaf's own open/close motion | same | **N/A, nessuna superficie di questo tipo** — same reasoning as the Elevation hierarchy row above: the plugin renders content inside a native leaf, it does not own the leaf's open/close chrome. |
+
+### Not touched (explicit non-goals, confirmed out of scope)
+
+- No layout/DOM changes anywhere — every fix in this wave is a `@media
+  (hover: hover)` wrapper addition around an existing, unchanged rule body.
+  12 rules gated, 0 rule bodies edited.
+- `aiditor-pop-in` keyframe geometry and duration — unchanged from wave 11;
+  already kit-compliant on both columns (Pop tier), not re-litigated here.
+- Row-level wash-transition tokens (`--mv-wash`/`--mv-lift` split) — audited
+  and found already compliant (see Hover richness table); nothing to fix,
+  nothing new added to the style contract for it, per the brief's "zero
+  speculative assertions" rule.
+- Drag polish and the tab-content-swap crossfade rule — confirmed N/A
+  surfaces, not invented.
+
+### Verification
+
+- `pnpm typecheck` — **0 errors** (`tsc --noEmit`, clean exit).
+- `pnpm test` — pre-fix baseline: 29 suites, 84 tests, 84 pass / 0 fail.
+  Post-fix: **29 suites, 85 tests, 85 pass / 0 fail** (+1 test: "§6: every
+  :hover selector is gated behind @media (hover: hover)"). The new
+  assertion was red-green verified: `git stash`-reverted `styles.css` to
+  its pre-fix state, re-ran `pnpm test`, confirmed the new assertion failed
+  listing all 12 ungated `:hover` lines (`.aiditor-comment-mark:hover`
+  first in the violations array), then `git stash pop`-restored the fix
+  and confirmed all 85 tests pass again. No speculative assertions
+  added — the wash/lift split needed no new test since it was already
+  compliant (see Hover richness table).
+- `pnpm build` — succeeds as part of `pnpm release:check` (typecheck +
+  esbuild production bundle), no new errors introduced.
+- **There is no lint script in this repo** (unchanged from wave 11):
+  `package.json` exposes `dev`, `build`, `release:check`, `typecheck`,
+  `test` — no `lint`, no eslint config or dependency. Reported as-is, none
+  invented or added for this wave.
+- Desktop screenshot / live vault reload verification: **pending** — not
+  performed this wave, same as wave 11.
+- Phone verification: **pending Mario's on-device sign-off** — per hard
+  constraint, `EmulateMobile` was never enabled during this wave (it
+  persists in `localStorage` and kills Node-dependent plugins). Every phone
+  verdict above was reached statically: by reading the resulting CSS and
+  `@media` structure against the kit's phone column, and by grepping
+  `src/` for mobile-gating logic (none found, confirming every surface
+  audited here is genuinely phone-reachable and the fix genuinely applies
+  on both columns).
