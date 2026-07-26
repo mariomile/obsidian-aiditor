@@ -25,8 +25,13 @@
   transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
-.aiditor-comment-mark:hover {
-  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.36);
+/* mv-kit §6: hover is gated to @media (hover: hover) — the highlight run is
+   tapped, not hovered, on phone; a bare :hover here would leave the wash
+   "stuck" after a tap since touch has no pointer to leave. */
+@media (hover: hover) {
+  .aiditor-comment-mark:hover {
+    background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.36);
+  }
 }
 
 /* Resolved comment: still reachable in-text, visually receded. */
@@ -36,9 +41,11 @@
   opacity: 0.65;
 }
 
-.aiditor-comment-mark--resolved:hover {
-  background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.18);
-  opacity: 1;
+@media (hover: hover) {
+  .aiditor-comment-mark--resolved:hover {
+    background: hsla(var(--color-yellow-hsl, 45 90% 60%) / 0.18);
+    opacity: 1;
+  }
 }
 
 /* ---------- Popover ---------- */
@@ -180,8 +187,11 @@
     opacity var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1));
 }
 
-.aiditor-popover-send:hover {
-  background: var(--interactive-accent-hover);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-popover-send:hover {
+    background: var(--interactive-accent-hover);
+  }
 }
 
 .aiditor-popover-send:active {
@@ -248,9 +258,12 @@
   height: 14px;
 }
 
-.aiditor-popover-btn:hover {
-  background: var(--mv-card-bg-hover, var(--background-modifier-hover));
-  border-color: color-mix(in srgb, var(--text-muted) 22%, transparent);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-popover-btn:hover {
+    background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+    border-color: color-mix(in srgb, var(--text-muted) 22%, transparent);
+  }
 }
 
 .aiditor-popover-btn:active {
@@ -271,9 +284,12 @@
   color: var(--interactive-accent);
 }
 
-.aiditor-popover-btn--primary:hover {
-  background: color-mix(in srgb, var(--interactive-accent) 22%, transparent);
-  border-color: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-popover-btn--primary:hover {
+    background: color-mix(in srgb, var(--interactive-accent) 22%, transparent);
+    border-color: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
+  }
 }
 
 .aiditor-popover-empty {
@@ -288,8 +304,11 @@
   color: var(--text-error);
 }
 
-.aiditor-popover-btn--danger.is-armed:hover {
-  background: color-mix(in srgb, var(--text-error) 20%, transparent);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-popover-btn--danger.is-armed:hover {
+    background: color-mix(in srgb, var(--text-error) 20%, transparent);
+  }
 }
 
 /* Multi-annotation list (a block with >1 annotation) */
@@ -320,8 +339,11 @@
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-.aiditor-popover-list-item:hover {
-  background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-popover-list-item:hover {
+    background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+  }
 }
 
 .aiditor-popover-list-item:focus-visible {
@@ -356,8 +378,11 @@
   height: 14px;
 }
 
-.aiditor-popover-back:hover {
-  color: var(--text-normal);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-popover-back:hover {
+    color: var(--text-normal);
+  }
 }
 
 /* ---------- Panel ---------- */
@@ -384,8 +409,11 @@
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-.aiditor-panel-tab:hover {
-  color: var(--text-normal);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-panel-tab:hover {
+    color: var(--text-normal);
+  }
 }
 
 .aiditor-panel-tab.is-active {
@@ -409,9 +437,12 @@
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-.aiditor-panel-item:hover {
-  background: var(--mv-card-bg-hover, var(--background-modifier-hover));
-  border-color: var(--mv-hairline, var(--background-modifier-border));
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-panel-item:hover {
+    background: var(--mv-card-bg-hover, var(--background-modifier-hover));
+    border-color: var(--mv-hairline, var(--background-modifier-border));
+  }
 }
 
 .aiditor-panel-item-quote {
@@ -467,9 +498,12 @@
   height: 14px;
 }
 
-.aiditor-panel-item-action:hover {
-  background: var(--background-modifier-hover);
-  border-color: color-mix(in srgb, var(--text-muted) 22%, transparent);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-panel-item-action:hover {
+    background: var(--background-modifier-hover);
+    border-color: color-mix(in srgb, var(--text-muted) 22%, transparent);
+  }
 }
 
 .aiditor-panel-item-action:active {
@@ -488,8 +522,11 @@
   color: var(--text-error);
 }
 
-.aiditor-panel-item-action--danger.is-armed:hover {
-  background: color-mix(in srgb, var(--text-error) 20%, transparent);
+/* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
+@media (hover: hover) {
+  .aiditor-panel-item-action--danger.is-armed:hover {
+    background: color-mix(in srgb, var(--text-error) 20%, transparent);
+  }
 }
 
 .aiditor-panel-empty {
