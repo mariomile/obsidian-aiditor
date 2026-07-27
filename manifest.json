@@ -1,7 +1,7 @@
 {
   "id": "aiditor",
   "name": "AIditor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "1.10.0",
   "description": "Durable, resolvable margin annotations anchored to blocks.",
   "author": "Mario Miletta",
