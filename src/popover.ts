@@ -174,7 +174,10 @@ export class AnnotationPopover extends Component {
     this.el.createDiv({ cls: 'aiditor-popover-list-header', text: `${list.length} annotations` });
     const listEl = this.el.createDiv({ cls: 'aiditor-popover-list' });
     for (const a of list) {
-      const item = listEl.createDiv({ cls: 'aiditor-popover-list-item' });
+      const item = listEl.createEl('button', {
+        cls: 'aiditor-popover-list-item',
+        attr: { type: 'button', 'aria-label': `Open annotation: ${a.body || a.quote || 'empty'}` },
+      });
       // No chip for the default "active" state; only resolved/orphaned carry one.
       if (a.status !== 'active') {
         item.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
@@ -199,7 +202,10 @@ export class AnnotationPopover extends Component {
     if (this.blockScope) {
       const list = annotationsForBlock(store.getAll(), this.blockScope.blockId, this.blockScope.notePath);
       if (list.length > 1) {
-        const back = this.el.createDiv({ cls: 'aiditor-popover-back', attr: { role: 'button' } });
+        const back = this.el.createEl('button', {
+          cls: 'aiditor-popover-back',
+          attr: { type: 'button' },
+        });
         setIcon(back, 'chevron-left');
         back.createSpan({ text: 'All annotations' });
         this.registerDomEvent(back, 'click', () => {

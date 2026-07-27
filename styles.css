@@ -336,11 +336,18 @@
 }
 
 .aiditor-popover-list-item {
+  appearance: none;
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   padding: 6px 8px;
+  border: 0;
   border-radius: var(--mv-r1, var(--radius-s, 6px));
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  box-shadow: none;
   cursor: pointer;
   transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
@@ -368,11 +375,16 @@
 }
 
 .aiditor-popover-back {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 3px;
   font-size: 0.8em;
   color: var(--text-muted);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
   margin-bottom: 8px;
   transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
@@ -401,6 +413,7 @@
 }
 
 .aiditor-panel-tab {
+  appearance: none;
   flex: 1;
   display: flex;
   align-items: center;
@@ -410,7 +423,10 @@
   cursor: pointer;
   font-size: 0.85em;
   color: var(--text-muted);
+  background: transparent;
+  border: 0;
   border-bottom: 2px solid transparent;
+  box-shadow: none;
   transition: color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
@@ -438,10 +454,22 @@
   border-radius: var(--mv-r1, var(--radius-s, 6px));
   background: var(--mv-card-bg, var(--background-secondary));
   border: 1px solid transparent;
-  cursor: pointer;
   transition: background var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     border-color var(--cosmos-t-fast, 140ms) var(--mv-wash, cubic-bezier(0.25, 1, 0.5, 1)),
     transform var(--cosmos-t-fast, 140ms) var(--mv-lift, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.aiditor-panel-item-main {
+  appearance: none;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
 }
 
 /* mv-kit §6: gated, see the .aiditor-comment-mark:hover comment above. */
@@ -556,6 +584,7 @@
 
   .aiditor-popover-btn,
   .aiditor-panel-item-action,
+  .aiditor-panel-item-main,
   .aiditor-panel-tab,
   .aiditor-popover-list-item,
   .aiditor-popover-back {
@@ -563,7 +592,7 @@
   }
 
   .aiditor-panel-tab:active,
-  .aiditor-panel-item:active,
+  .aiditor-panel-item-main:active,
   .aiditor-popover-list-item:active,
   .aiditor-popover-back:active {
     transform: scale(var(--cosmos-press-scale, 0.98));
@@ -584,7 +613,7 @@
     }
 
     .aiditor-panel-tab,
-    .aiditor-panel-item,
+    .aiditor-panel-item-main,
     .aiditor-popover-list-item,
     .aiditor-popover-back {
       transition: none;

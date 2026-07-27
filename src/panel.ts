@@ -75,10 +75,18 @@ export class AIditorPanelView extends ItemView {
     const notePath = this.activeNotePath();
     const counts = countsForNote(this.host.store.getStore(), notePath);
 
-    const tabsEl = root.createDiv({ cls: 'aiditor-panel-tabs' });
+    const tabsEl = root.createDiv({
+      cls: 'aiditor-panel-tabs',
+      attr: { role: 'tablist', 'aria-label': 'Annotation status' },
+    });
     for (const status of PANEL_TABS) {
-      const tabBtn = tabsEl.createDiv({
+      const tabBtn = tabsEl.createEl('button', {
         cls: `aiditor-panel-tab${status === this.tab ? ' is-active' : ''}`,
+        attr: {
+          type: 'button',
+          role: 'tab',
+          'aria-selected': String(status === this.tab),
+        },
       });
       tabBtn.createSpan({ cls: 'aiditor-panel-tab-label', text: tabLabelWithCount(status, counts[status]) });
       tabBtn.addEventListener('click', () => {
@@ -107,14 +115,18 @@ export class AIditorPanelView extends ItemView {
 
   private renderItem(parent: HTMLElement, a: Annotation): void {
     const item = parent.createDiv({ cls: 'aiditor-panel-item' });
+    const open = item.createEl('button', {
+      cls: 'aiditor-panel-item-main',
+      attr: { type: 'button', 'aria-label': 'Open annotation' },
+    });
     if (a.quote) {
-      item.createDiv({ cls: 'aiditor-panel-item-quote', text: truncate(a.quote, QUOTE_TRUNCATE_LEN) });
+      open.createDiv({ cls: 'aiditor-panel-item-quote', text: truncate(a.quote, QUOTE_TRUNCATE_LEN) });
     }
-    item.createDiv({
+    open.createDiv({
       cls: 'aiditor-panel-item-body',
       text: a.body ? truncate(a.body, BODY_TRUNCATE_LEN) : '(empty annotation)',
     });
-    item.createDiv({ cls: 'aiditor-panel-item-time', text: relativeTime(a.updated, Date.now()) });
+    open.createDiv({ cls: 'aiditor-panel-item-time', text: relativeTime(a.updated, Date.now()) });
 
     if (a.status === 'orphaned') {
       this.renderOrphanActions(item, a);
@@ -123,8 +135,7 @@ export class AIditorPanelView extends ItemView {
       // Re-anchor/Delete don't also trigger the scroll-and-open flow.
     }
 
-    item.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.aiditor-panel-item-actions')) return;
+    open.addEventListener('click', () => {
       void this.openAndFocus(a, item);
     });
   }
@@ -134,7 +145,7 @@ export class AIditorPanelView extends ItemView {
 
     const reanchorBtn = actions.createEl('button', {
       cls: 'aiditor-panel-item-action',
-      attr: { 'aria-label': 'Re-anchor' },
+      attr: { type: 'button', 'aria-label': 'Re-anchor' },
     });
     setIcon(reanchorBtn, 'link');
     reanchorBtn.createSpan({ text: 'Re-anchor' });
@@ -150,7 +161,7 @@ export class AIditorPanelView extends ItemView {
 
     const deleteBtn = actions.createEl('button', {
       cls: 'aiditor-panel-item-action aiditor-panel-item-action--danger',
-      attr: { 'aria-label': 'Delete' },
+      attr: { type: 'button', 'aria-label': 'Delete' },
     });
     setIcon(deleteBtn, 'trash-2');
     const deleteLabel = deleteBtn.createSpan({ text: 'Delete' });
