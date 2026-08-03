@@ -5,5 +5,5 @@
   "minAppVersion": "1.10.0",
   "description": "Durable, resolvable margin annotations anchored to blocks.",
   "author": "Mario Miletta",
-  "isDesktopOnly": true
+  "isDesktopOnly": false
 }
