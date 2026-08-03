@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, type WorkspaceLeaf } from 'obsidian';
+import { MarkdownView, Notice, Plugin, debounce, type WorkspaceLeaf } from 'obsidian';
 import type { VirtualElement } from '@floating-ui/dom';
 import { AnnotationVaultStore } from './store.ts';
 import { wireOrphanRecompute } from './anchor.ts';
@@ -106,11 +106,23 @@ export default class AIditorPlugin extends Plugin {
       },
     });
 
+    // refreshAllMarks() itera TUTTE le leaf e lancia un dispatch CodeMirror per
+    // ogni MarkdownView: il costo cresce col numero di tab aperti, e
+    // active-leaf-change scatta a ogni cambio o chiusura di tab.
+    // Misurato 2026-08-03 strumentando i listener sul vault reale (18 tab):
+    // 13.8ms per evento in raffica — dopo il fix analogo su Exo era diventato il
+    // principale costo residuo di quell'evento.
+    // Il refresh è IDEMPOTENTE: eseguirlo una volta a riposo equivale a
+    // eseguirlo N volte durante uno sweep fra i tab. Debounced a 120ms con
+    // resetTimer; l'intento di design (§6: decorazioni in sync sul cambio leaf)
+    // resta intatto, cambia solo quando il lavoro atterra.
+    const refreshMarksDebounced = debounce(() => this.refreshAllMarks(), 120, true);
+    this.register(() => refreshMarksDebounced.cancel());
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', (leaf) => {
         const view = leaf?.view;
         if (view instanceof MarkdownView && view.file) {
-          this.refreshAllMarks();
+          refreshMarksDebounced();
         }
       }),
     );
