@@ -36,7 +36,7 @@ export class AnnotationVaultStore {
   private readonly vault: Vault;
   private store: AnnotationStore = emptyStore();
   private listeners = new Set<StoreChangeListener>();
-  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private debounceTimer: number | null = null;
   private inFlightWrite: Promise<void> | null = null;
   private revision = 0;
   private persistedRevision = 0;
@@ -135,8 +135,8 @@ export class AnnotationVaultStore {
   }
 
   private scheduleWrite(): void {
-    if (this.debounceTimer !== null) clearTimeout(this.debounceTimer);
-    this.debounceTimer = setTimeout(() => {
+    if (this.debounceTimer !== null) window.clearTimeout(this.debounceTimer);
+    this.debounceTimer = window.setTimeout(() => {
       this.debounceTimer = null;
       void this.flush().catch((error: unknown) => {
         console.error('AIditor: failed to persist annotations', error);
@@ -152,7 +152,7 @@ export class AnnotationVaultStore {
    */
   async flush(): Promise<void> {
     if (this.debounceTimer !== null) {
-      clearTimeout(this.debounceTimer);
+      window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
     if (this.revision <= this.persistedRevision) return;
