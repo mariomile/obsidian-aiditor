@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import type { Vault } from 'obsidian';
 import { AnnotationVaultStore, STORE_PATH } from './store.ts';
 
+// store.ts uses window.setTimeout (popout-safe in Obsidian); Node has no `window`.
+(globalThis as { window?: unknown }).window ??= globalThis;
+
 function storeWith(write: (path: string, data: string) => Promise<void>): AnnotationVaultStore {
   const vault = {
     adapter: {

@@ -8,6 +8,8 @@ Not in scope for MVP: multi-user, threading/replies, AI-generated annotations (o
 
 Part of the marioverse Obsidian plugin suite.
 
+**Privacy:** despite the name, AIditor makes no network requests, calls no AI service, and needs no account or API key. Everything stays in your vault (see [Storage](#storage)).
+
 <p align="center">
   <img src="docs/annotation.png" width="900" alt="AIditor — an inline annotation highlight" />
 </p>

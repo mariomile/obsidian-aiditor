@@ -40,9 +40,9 @@ export default class AIditorPlugin extends Plugin {
     // mirroring Exo's askExo cross-plugin pattern:
     //   app.plugins.plugins.aiditor.addAnnotation({ notePath, quote, body })
     const api = createAIditorApi({ app: this.app, store: this.store });
-    this.addAnnotation = api.addAnnotation;
-    this.getAnnotations = api.getAnnotations;
-    this.resolveAnnotation = api.resolveAnnotation;
+    this.addAnnotation = api.addAnnotation.bind(api);
+    this.getAnnotations = api.getAnnotations.bind(api);
+    this.resolveAnnotation = api.resolveAnnotation.bind(api);
 
     this.popover = new AnnotationPopover({ app: this.app, store: this.store });
     this.addChild(this.popover);
@@ -129,7 +129,8 @@ export default class AIditorPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const saved = (await this.loadData()) as Partial<AIditorSettings> | null;
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
   }
 
   async saveSettings(): Promise<void> {
@@ -189,7 +190,7 @@ export default class AIditorPlugin extends Plugin {
       leaf = workspace.getRightLeaf(false);
       await leaf?.setViewState({ type: VIEW_TYPE_AIDITOR_PANEL, active: true });
     }
-    if (leaf) workspace.revealLeaf(leaf);
+    if (leaf) await workspace.revealLeaf(leaf);
   }
 
   onunload(): void {

@@ -28,8 +28,6 @@ export class AIditorSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName('AIditor').setHeading();
-
     new Setting(containerEl)
       .setName('Annotation store path')
       .setDesc(
