@@ -13,7 +13,7 @@ Part of the marioverse Obsidian plugin suite.
 <p align="center">
   <img src="docs/annotation.png" width="900" alt="AIditor — an inline annotation highlight" />
 </p>
-<p align="center"><em>An annotated block, highlighted inline with its block anchor visible below.</em></p>
+<p align="center"><em>Two annotated blocks, highlighted inline with their block anchors, and the annotations panel on the right.</em></p>
 
 ## Anchoring model
 
