@@ -183,7 +183,7 @@ export class AnnotationPopover extends Component {
         item.createSpan({ cls: `aiditor-status aiditor-status--${a.status}`, text: a.status });
       }
       item.createSpan({ cls: 'aiditor-popover-list-item-body', text: a.body || a.quote || '(empty)' });
-      this.registerDomEvent(item, 'click', () => {
+      item.addEventListener('click', () => {
         this.annotationId = a.id;
         this.render();
       });
@@ -208,7 +208,7 @@ export class AnnotationPopover extends Component {
         });
         setIcon(back, 'chevron-left');
         back.createSpan({ text: 'All annotations' });
-        this.registerDomEvent(back, 'click', () => {
+        back.addEventListener('click', () => {
           this.annotationId = null;
           this.render();
         });
@@ -240,8 +240,8 @@ export class AnnotationPopover extends Component {
       store.updateBody(a.id, textarea.value);
       this.close();
     };
-    this.registerDomEvent(textarea, 'blur', () => store.updateBody(a.id, textarea.value));
-    this.registerDomEvent(textarea, 'keydown', (e) => {
+    textarea.addEventListener('blur', () => store.updateBody(a.id, textarea.value));
+    textarea.addEventListener('keydown', (e) => {
       // Enter (and Cmd/Ctrl+Enter) submit; Shift+Enter inserts a newline.
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -263,8 +263,8 @@ export class AnnotationPopover extends Component {
       setIcon(send, 'arrow-up');
       const syncSend = () => send.toggleClass('is-disabled', shouldDiscardBody(textarea.value));
       syncSend();
-      this.registerDomEvent(textarea, 'input', syncSend);
-      this.registerDomEvent(send, 'click', () => {
+      textarea.addEventListener('input', syncSend);
+      send.addEventListener('click', () => {
         if (shouldDiscardBody(textarea.value)) return;
         saveAndClose();
       });
@@ -307,7 +307,7 @@ export class AnnotationPopover extends Component {
     setIcon(btn, 'trash-2');
     const label = btn.createSpan({ text: 'Delete' });
     let armed = false;
-    this.registerDomEvent(btn, 'click', () => {
+    btn.addEventListener('click', () => {
       if (!armed) {
         armed = true;
         btn.addClass('is-armed');
@@ -326,7 +326,7 @@ export class AnnotationPopover extends Component {
     });
     setIcon(btn, icon);
     btn.createSpan({ text: label });
-    this.registerDomEvent(btn, 'click', onClick);
+    btn.addEventListener('click', onClick);
   }
 
   /** Re-anchor (design §6): rebind an orphaned annotation to the current selection. */
