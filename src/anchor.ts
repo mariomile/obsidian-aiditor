@@ -108,7 +108,10 @@ export async function ensureBlockId(
 /** Reads the note text for orphan-check purposes, preferring the live editor buffer. */
 export async function readNoteText(app: App, file: TFile): Promise<string> {
   const open = findOpenEditorFor(app, file);
-  if (open) return open.editor.getValue();
+  const buffer = open?.editor.getValue();
+  // A leaf that just became active may not have loaded its file yet: an empty
+  // buffer would mark every annotation of the note orphaned. Fall back to disk.
+  if (buffer) return buffer;
   return app.vault.read(file);
 }
 
