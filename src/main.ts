@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, debounce, type WorkspaceLeaf } from 'obsidian';
+import { MarkdownView, Notice, Plugin, debounce, editorInfoField, type WorkspaceLeaf } from 'obsidian';
 import type { VirtualElement } from '@floating-ui/dom';
 import { AnnotationVaultStore } from './store.ts';
 import { wireOrphanRecompute } from './anchor.ts';
@@ -56,14 +56,15 @@ export default class AIditorPlugin extends Plugin {
     // decorations on doc/viewport change and on store mutations that don't
     // touch the note text (resolve/reopen/delete) via MarksHost.onStoreChange.
     const marksHost: MarksHost = {
-      visibleAnnotations: () => {
-        const notePath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path;
+      // Resolve the note per editor, not from the active view: in a split, the
+      // other pane would otherwise get the active note's annotations matched
+      // against its own text (false highlights).
+      visibleAnnotations: (view) => {
+        const notePath = view.state.field(editorInfoField, false)?.file?.path;
+        if (!notePath) return [];
         return this.store
           .getAll()
-          .filter(
-            (a) =>
-              (a.status === 'active' || a.status === 'resolved') && (!notePath || a.notePath === notePath),
-          );
+          .filter((a) => (a.status === 'active' || a.status === 'resolved') && a.notePath === notePath);
       },
       onMarkClick: (annotationId, dom) => {
         const rect = dom.getBoundingClientRect();

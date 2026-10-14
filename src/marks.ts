@@ -28,8 +28,8 @@ import type { Annotation } from './model.ts';
 const MARK_ATTR = 'data-aiditor-id';
 
 export interface MarksHost {
-  /** Active + resolved annotations for the note currently shown to the user. */
-  visibleAnnotations: () => Annotation[];
+  /** Active + resolved annotations for the note shown in this editor. */
+  visibleAnnotations: (view: EditorView) => Annotation[];
   /** Open the popover for a clicked annotation, anchored to its highlighted `dom`. */
   onMarkClick: (annotationId: string, dom: HTMLElement) => void;
   /** Subscribe to store changes (resolve/reopen/delete/add); returns an unsubscribe. */
@@ -40,7 +40,7 @@ export interface MarksHost {
 export const refreshAIditorMarksEffect = StateEffect.define<null>();
 
 function buildDecorations(view: EditorView, host: MarksHost): DecorationSet {
-  const annotations = host.visibleAnnotations();
+  const annotations = host.visibleAnnotations(view);
   // Fast path for the common case (note with no annotations): skip
   // materializing the whole doc to a string on every keystroke.
   if (annotations.length === 0) return Decoration.none;
