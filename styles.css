@@ -1,14 +1,6 @@
 /* ===== AIditor ===== */
 /* All selectors in this file use the `.aiditor-` prefix. */
 
-.aiditor-container {
-  background: var(--background-secondary);
-}
-
-.aiditor-hint {
-  color: var(--text-muted);
-}
-
 /* ---------- Inline comment highlight (Live Preview) ---------- */
 /* Commented text is highlighted in place — no gutter, so the editor keeps its
    full width. The span itself is the click target that opens the popover.
@@ -80,12 +72,6 @@
   .aiditor-popover {
     animation: none;
   }
-}
-
-.aiditor-popover-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
 }
 
 /* Status chip — Cosmos small-caps label recipe, pill shaped */
